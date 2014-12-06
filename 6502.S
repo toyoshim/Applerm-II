@@ -233,6 +233,10 @@
   adds PC, PC, #1
 .endm
 
+.macro _adc
+// TODO
+.endm
+
 .macro _asl
   __cl (FLAG_N | FLAG_Z | FLAG_C)
   movs r1, #0x80
@@ -452,6 +456,12 @@ op5a:
 op5b:
 op5c:
 op5f:
+op62:
+op63:
+op64:
+op67:
+op6b:
+op6f:
   _nop
   _decode
 
@@ -756,38 +766,63 @@ op5e:  // LSR - Absolute, X
   _toAddr
   _decode
 
-op60:
-  b    quit
-op61:
-  b    quit
-op62:
-  b    quit
-op63:
-  b    quit
-op64:
-  b    quit
-op65:
-  b    quit
-op66:
-  b    quit
-op67:
-  b    quit
-op68:
-  b    quit
-op69:
-  b    quit
-op6a:
-  b    quit
-op6b:
-  b    quit
-op6c:
-  b    quit
-op6d:
-  b    quit
-op6e:
-  b    quit
-op6f:
-  b    quit
+op60: // RTS
+  _popw
+  adds PC, r0, #1
+  _decode
+
+op61:  // ADC - (Indirect, X)
+  _fromIndexedIndirect
+  _adc
+  _decode
+
+op65:  // ADC - Zero Page
+  _fromZero
+  _adc
+  _decode
+
+op66:  // ROR - Zero Page
+  _fromZero
+  _ror
+  _toAddr
+  _decode
+
+op68:  // PLA
+  _popb
+  _flag_nz
+  mov  RA, r0
+  adds PC, PC, #1
+  _decode
+
+op69:  // ADC - Immediate
+  _fromImmb
+  _adc
+  _decode
+
+op6a:  // ROR - Accumulator
+  _fromReg RA
+  _ror
+  _toReg RA
+  _decode
+
+op6c:  // JMP - Indirect
+  adds r0, PC, #1
+  _ldw
+  _ldw
+  _jmp
+  _decode
+
+op6d:  // ADC - Absolute
+  _fromAbsb
+  _adc
+  _decode
+
+op6e:  // ROR - Absolute
+  _fromAbsb
+  _ror
+  _toAddr
+  _decode
+
 op70:
   b    quit
 op71:
