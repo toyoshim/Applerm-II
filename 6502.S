@@ -358,6 +358,10 @@
   adds PC, PC, #1
 .endm
 
+.macro _inc
+// TODO
+.endm
+
 .macro _jmp
   mov  PC, r0
 .endm
@@ -449,6 +453,10 @@
   mov  SR, r0
   _popw
   mov  PC, r0
+.endm
+
+.macro _sbc
+// TODO
 .endm
 
 .macro _t a b
@@ -589,6 +597,20 @@ opda:
 opdb:
 opdc:
 opdf:
+ope2:
+ope3:
+ope7:
+opea:
+opeb:
+opef:
+opf2:
+opf3:
+opf4:
+opf7:
+opfa:
+opfb:
+opfc:
+opff:
   _nop
   _decode
 
@@ -1231,7 +1253,7 @@ opc6:  // DEC - Zero Page
 
 opc8:  // INY
   _fromReg RY
-  _dec
+  _inc
   _toReg RY
   _decode
 
@@ -1306,71 +1328,102 @@ opde:  // DEC - Absolute, X
   _toAddr
   _decode
 
-ope0:
-  b    quit
-ope1:
-  b    quit
-ope2:
-  b    quit
-ope3:
-  b    quit
-ope4:
-  b    quit
-ope5:
-  b    quit
-ope6:
-  b    quit
-ope7:
-  b    quit
-ope8:
-  b    quit
-ope9:
-  b    quit
-opea:
-  b    quit
-opeb:
-  b    quit
-opec:
-  b    quit
-oped:
-  b    quit
-opee:
-  b    quit
-opef:
-  b    quit
-opf0:
-  b    quit
-opf1:
-  b    quit
-opf2:
-  b    quit
-opf3:
-  b    quit
-opf4:
-  b    quit
-opf5:
-  b    quit
-opf6:
-  b    quit
-opf7:
-  b    quit
+ope0:  // CPX - Immediate
+  _fromImmb
+  _cp  RX
+  _decode
+
+ope1:  // SBC - (Indirect, X)
+  _fromIndexedIndirect
+  _sbc
+  _decode
+
+ope4:  // CPX - Zero Page
+  _fromZero
+  _cp  RX
+  _decode
+
+ope5:  // SBC - Zero Page
+  _fromZero
+  _sbc
+  _decode
+
+ope6:  // INC - Zero Page
+  _fromZero
+  _inc
+  _toAddr
+  _decode
+
+ope8:  // INX
+  _fromReg RX
+  _inc
+  _toAddr
+  _decode
+
+ope9:  // SBC - Immediate
+  _fromImmb
+  _sbc
+  _decode
+
+opec:  // CPX - Absolute
+  _fromAbsb
+  _cp  RX
+  _decode
+
+oped:  // SBC - Absolute
+  _fromAbsb
+  _sbc
+  _decode
+
+opee:  // INC - Absolute
+  _fromAbsb
+  _inc
+  _toAddr
+  _decode
+
+opf0:  // BEQ (Z==1)
+  movs r0, #FLAG_Z
+  tst  SR, r0
+  beq  1f
+  _bxx
+1:
+  _decode
+
+opf1:  // SBC - (Indirect), Y
+  _fromIndirectIndex
+  _sbc
+  _decode
+
+opf5:  // SBC - Zero Page, X
+  _fromZeroIndex RX
+  _sbc
+  _decode
+
+opf6:  // INC - Zero Page, X
+  _fromZeroIndex RX
+  _inc
+  _toAddr
+  _decode
+
 opf8:  // SED
   _sex FLAG_D
   _decode
-opf9:
-  b    quit
-opfa:
-  b    quit
-opfb:
-  b    quit
-opfc:
-  b    quit
-opfd:
-  b    quit
-opfe:
-  b    quit
-opff:
-  b    quit
+
+opf9:  // SBC - Absolute, Y
+  _fromAbsoluteIndexed RY
+  _sbc
+  _decode
+
+opfd:  // SBC - Absolute, X
+  _fromAbsoluteIndexed RX
+  _sbc
+  _decode
+
+opfe:  // INC - Absolute, X
+  _fromAbsoluteIndexed RX
+  _inc
+  _toAddr
+  _decode
 
   .global cpu6502_reset
   .type cpu6502_reset, %function
