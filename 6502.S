@@ -76,8 +76,25 @@
   mov  SP, r0
 .endm
 
+.macro _popb
+  mov  r0, SP
+  adds r0, r0, #1
+  mov  SP, r0
+  _ldb
+.endm
+
 .macro _decode
-  b    decode
+  bl   dump
+  mov  r0, PC
+  _ldb
+  lsls r1, r0, #2
+  ldr  r2, 1f
+  adds r3, r2, r1
+  ldr  r1, [r3]
+  mov  pc, r1
+  .align 4
+1:
+  .long op_table
 .endm
 
 .macro _fromAbsb
@@ -181,16 +198,6 @@
   orrs SR, SR, T0
 .endm
 
-.macro _clx flag
-  __cl \flag
-  adds PC, PC, #1
-.endm
-
-.macro _sex flag
-  __se \flag
-  adds PC, PC, #1
-.endm
-
 .macro _flag_nz
   __cl (FLAG_N | FLAG_Z)
   movs r0, r0
@@ -204,17 +211,13 @@
 1:
 .endm
 
-.macro _ld reg
-  mov  \reg, r0
-  _flag_nz
+.macro _clx flag
+  __cl \flag
   adds PC, PC, #1
 .endm
 
-.macro _lop op
-  mov  r1, RA
-  \op  r0, r1, r0
-  mov  RA, r0
-  _flag_nz
+.macro _sex flag
+  __se \flag
   adds PC, PC, #1
 .endm
 
@@ -237,14 +240,92 @@
   adds PC, PC, #1
 .endm
 
-.macro _nop
-  adds PC, PC, #1
+.macro _bit
+  __cl (FLAG_N | FLAG_Z | FLAG_V)
+  mov  r1, RA
+  ands r0, r1, r0
+  bne 1f
+  __se FLAG_Z
+1:
+  movs r1, #0x80
+  tst  r0, r1
+  beq 1f
+  __se FLAG_N
+1:
+  movs r1, #0x40
+  tst  r0, r1
+  beq 1f
+  __se FLAG_V
+1:
 .endm
 
 .macro _bxx
   _fromImm8
   sxtb r0, r0
   add  PC, PC, r0
+.endm
+
+.macro _ld reg
+  mov  \reg, r0
+  _flag_nz
+  adds PC, PC, #1
+.endm
+
+.macro _lop op
+  mov  r1, RA
+  \op  r0, r1, r0
+  mov  RA, r0
+  _flag_nz
+  adds PC, PC, #1
+.endm
+
+.macro _nop
+  adds PC, PC, #1
+.endm
+
+.macro _rol
+  movs r2, #FLAG_C
+  ands r2, SR, r2
+  __cl (FLAG_N | FLAG_Z | FLAG_C)
+  movs r1, #0x80
+  tst  r0, r1
+  beq 1f
+  __se FLAG_C
+1:
+  lsls r0, r0, #1
+  uxtb r0, r0
+  adds r0, r0, r2
+  bne 1f
+  __se FLAG_Z
+1:
+  tst  r0, r1
+  beq 1f
+  __se FLAG_N
+1:
+  adds PC, PC, #1
+.endm
+
+.macro _ror
+  movs r2, #FLAG_C
+  ands r2, SR, r2
+  lsls r2, r2, #7
+  __cl (FLAG_N | FLAG_Z | FLAG_C)
+  movs r1, #0x01
+  tst  r0, r1
+  beq 1f
+  __se FLAG_C
+1:
+  lsrs r0, r0, #1
+  adds r0, r0, r2
+  bne 1f
+  __se FLAG_Z
+1:
+  movs r1, #0x80
+  tst  r0, r1
+  beq 1f
+  __se FLAG_N
+1:
+  adds PC, PC, #1
 .endm
 
 .macro _resume
@@ -302,6 +383,11 @@ op1a:
 op1b:
 op1c:
 op1f:
+op22:
+op23:
+op27:
+op2b:
+op2f:
   _nop
   _decode
 
@@ -411,36 +497,60 @@ op20:  // JSR
   mov  PC, r0
   _decode
 
-op21:
-  b    quit
-op22:
-  b    quit
-op23:
-  b    quit
-op24:
-  b    quit
-op25:
-  b    quit
-op26:
-  b    quit
-op27:
-  b    quit
-op28:
-  b    quit
-op29:
-  b    quit
-op2a:
-  b    quit
-op2b:
-  b    quit
-op2c:
-  b    quit
-op2d:
-  b    quit
-op2e:
-  b    quit
-op2f:
-  b    quit
+op21:  // AND - (Indirect, X)
+  _fromIndexedIndirect
+  _lop ands
+  _decode
+
+op24:  // BIT - Zero Page
+  _fromZero
+  _bit
+  _decode
+
+op25:  // AND - Zero Page
+  _fromZero
+  _lop ands
+  _decode
+
+op26:  // ROR - Zero Page
+  _fromZero
+  _ror
+  _toAddr
+  _decode
+
+op28:  // PLP
+  _popb
+  mov  SR, r0
+  adds PC, PC, #1
+  _decode
+
+op29:  // AND - Immediate
+  _fromImm8
+  _lop ands
+  _decode
+
+op2a:  // ROR - Accumulator
+  _fromReg RA
+  _ror
+  _toReg RA
+  _decode
+
+op2c:  // BIT - Absolute
+  _fromAbsb
+  _bit
+  _decode
+
+op2d:  // AND - Absolute
+  _fromAbsb
+  _lop ands
+  _decode
+
+op2e:  // ROL - Absolute
+  _fromAbsb
+  _rol
+  _toAddr
+  _decode
+
 op30:
   b    quit
 op31:
@@ -951,18 +1061,6 @@ dump:
   adds r0, r0, #8
   mov  sp, r0
   pop  {pc}
-
-// void decode();
-  .type decode, %function
-decode:
-  bl   dump
-  mov  r0, PC
-  _ldb
-  lsls r1, r0, #2
-  ldr  r2, =#op_table
-  adds r3, r2, r1
-  ldr  r1, [r3]
-  mov  pc, r1
 
   .section .rodata
 op_table:
