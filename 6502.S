@@ -567,6 +567,11 @@ opa3:
 opa7:
 opab:
 opaf:
+opb2:
+opb3:
+opb7:
+opbb:
+opbf:
   _nop
   _decode
 
@@ -1125,39 +1130,62 @@ opae:  // LDX - Absolute
   _ld  RX
   _decode
 
-opb0:
-  b    quit
-opb1:
-  b    quit
-opb2:
-  b    quit
-opb3:
-  b    quit
-opb4:
-  b    quit
-opb5:
-  b    quit
-opb6:
-  b    quit
-opb7:
-  b    quit
+opb0:  // BCS (C==1)
+  movs r0, #FLAG_C
+  tst  SR, r0
+  beq 1f
+  _bxx
+1:
+  _decode
+
+opb1:  // LDA - (Indirect), Y
+  _fromIndirectIndex
+  _ld  RA
+  _decode
+
+opb4:  // LDY - Zero Page, X
+  _fromZeroIndex RX
+  _ld  RY
+  _decode
+
+opb5:  // LDA - Zero Page, X
+  _fromZeroIndex RX
+  _ld  RA
+  _decode
+
+opb6:  // LDX - Zero Page, Y
+  _fromZeroIndex RY
+  _ld  RX
+  _decode
+
 opb8:  // CLV
   _clx FLAG_V
   _decode
-opb9:
-  b    quit
-opba:
-  b    quit
-opbb:
-  b    quit
-opbc:
-  b    quit
-opbd:
-  b    quit
-opbe:
-  b    quit
-opbf:
-  b    quit
+
+opb9:  // LDA - Absolute, Y
+  _fromAbsoluteIndexed RY
+  _ld  RA
+  _decode
+
+opba:  // TSX
+  _t   SR, RX
+  _decode
+
+opbc:  // LDY - Absolute, X
+  _fromAbsoluteIndexed RX
+  _ld  RY
+  _decode
+
+opbd:  // LDA - Absolute, X
+  _fromAbsoluteIndexed RX
+  _ld  RA
+  _decode
+
+opbe:  // LDX - Absolute, Y
+  _fromAbsoluteIndexed RY
+  _ld  RX
+  _decode
+
 opc0:
   b    quit
 opc1:
