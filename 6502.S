@@ -52,7 +52,16 @@
   bl   cpu6502_store
 .endm
 
-.macro _push16 reg
+.macro _pushb reg
+  mov  r0, SP
+  mov  r1, \reg
+  _stb
+  mov  r0, SP
+  subs r0, r0, #1
+  mov  SP, r0
+.endm
+
+.macro _pushw reg
   mov  r0, SP
   mov  r1, \reg
   lsrs r1, r1, #8
@@ -76,30 +85,107 @@
   _ldb
 .endm
 
-.macro _clx flag
+.macro _fromIndexedIndirect
+  _fromImm8
+  mov  r1, RX
+  adds r0, r0, R1
+  uxtb r0, r0
+  mov  T0, r0
+  _ldb
+  mov  T1, r0
+  adds r0, T0, #1
+  uxtb r0, r0
+  _ldb
+  lsls r0, r0, #8
+  adds r0, r0, T1
+  _ldb
+.endm
+
+.macro _fromZero
+  _fromImm8
+  _ldb
+.endm
+
+.macro _toZero
+  _fromImm8
+  mov  r1, T0
+  _stb
+.endm
+
+.macro __cl flag
   movs T0, #\flag
   bics SR, SR, T0
+.endm
+
+.macro __se flag
+  movs T0, #\flag
+  orrs SR, SR, T0
+.endm
+
+.macro _clx flag
+  __cl \flag
   adds PC, PC, #1
 .endm
 
 .macro _sex flag
-  movs T0, #\flag
-  orrs SR, SR, T0
+  __se \flag
   adds PC, PC, #1
 .endm
 
-.macro _ld reg
-  _clx (FLAG_N | FLAG_Z)
-  mov  \reg, r0
-  beq  1f
-  _sex FLAG_Z
+.macro _flag_nz
+  __cl (FLAG_N | FLAG_Z)
+  movs r0, r0
+  bne  1f
+  __se FLAG_Z
 1:
   movs r1, #0x80
   tst  r0, r1
   beq  1f
-  _sex FLAG_N
+  __se FLAG_N
+1:
+.endm
+
+.macro _ld reg
+  mov  \reg, r0
+  _flag_nz
+  adds PC, PC, #1
+.endm
+
+.macro _lop op
+  mov  r1, RA
+  \op  r0, r1, r0
+  mov  RA, r0
+  _flag_nz
+  adds PC, PC, #1
+.endm
+
+.macro _asl
+  __cl (FLAG_N | FLAG_Z | FLAG_C)
+  movs r1, #0x80
+  tst  r0, r1
+  beq 1f
+  bics r0, r0, r1
+  __se FLAG_C
+1:
+  lsls r0, r0, #1
+  bne 1f
+  __se FLAG_Z
+1:
+  tst  r0, r1
+  beq 1f
+  __se FLAG_N
 1:
   adds PC, PC, #1
+.endm
+
+.macro _nop
+  adds PC, PC, #1
+.endm
+
+.macro _bxx
+  _fromImm8
+  sxtb r0, r0
+  add  PC, PC, r0
 .endm
 
 .macro _resume
@@ -141,24 +227,46 @@
   str  T0, [r0]
 .endm
 
-op00:
-  b    quit
-op01:
-  b    quit
+// NOP
 op02:
-  b    quit
 op03:
-  b    quit
 op04:
-  b    quit
-op05:
-  b    quit
-op06:
-  b    quit
 op07:
-  b    quit
-op08:
-  b    quit
+  _nop
+  _decode
+
+op00:  // BRK
+  adds T0, PC, #2
+  _pushw T0
+  _pushb SR
+  movs r0, #0xff
+  lsls r0, r0, #8
+  adds r0, r0, #0xfe
+  _ldw
+  mov  PC, r0
+  _decode
+
+op01:  // ORA - (Indirect, X)
+  _fromIndexedIndirect
+  _lop orrs
+  _decode
+
+op05:  // ORA - Zero Page
+  _fromZero
+  _lop orrs
+  _decode
+
+op06:  // ASL - Zero Page
+  _fromZero
+  _asl
+  _toZero
+  _decode
+
+op08:  // PHP
+  _pushb SR
+  adds PC, PC, #1
+  _decode
+
 op09:
   b    quit
 op0a:
@@ -208,7 +316,7 @@ op1f:
   b    quit
 op20:  // JSR
   adds T0, PC, #2
-  _push16 T0
+  _pushw T0
   adds r0, PC, #1
   _ldw
   mov  PC, r0
@@ -414,8 +522,10 @@ op82:
   b    quit
 op83:
   b    quit
-op84:
-  b    quit
+op84:  // STY - Zero Page
+  mov  T0, RY
+  _toZero
+  _decode
 op85:
   b    quit
 op86:
@@ -573,8 +683,13 @@ opce:
   b    quit
 opcf:
   b    quit
-opd0:
-  b    quit
+opd0:  // BNE (Z==0)
+  movs r0, #FLAG_Z
+  tst  SR, r0
+  bne  1f
+  _bxx
+1:
+  _decode
 opd1:
   b    quit
 opd2:
