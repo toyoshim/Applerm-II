@@ -88,6 +88,15 @@
   _ldb
 .endm
 
+.macro _fromAbsoluteIndexed reg
+  adds PC, PC, #1
+  mov  r0, PC
+  _ldw
+  add  r0, r0, \reg
+  mov  ADDR, r0
+  _ldb
+.endm
+
 .macro _fromImm8
   adds PC, PC, #1
   mov  r0, PC
@@ -111,12 +120,37 @@
   _ldb
 .endm
 
+.macro _fromIndirectIndex
+  _fromImm8
+  mov  T0, r0
+  _ldb
+  mov  T1, r0
+  mov  r0, T0
+  adds r0, r0, #1
+  uxtb r0, r0
+  _ldb
+  lsls r0, r0, #8
+  add  r0, r0, T1
+  add  r0, r0, RY
+  mov  ADDR, r0
+  _ldb
+.endm
+
 .macro _fromReg reg
   mov  r0, \reg
 .endm
 
 .macro _fromZero
   _fromImm8
+  mov  ADDR, r0
+  _ldb
+.endm
+
+
+.macro _fromZeroIndex reg
+  _fromImm8
+  add  r0, r0, \reg
+  uxtb r0, r0
   mov  ADDR, r0
   _ldb
 .endm
@@ -260,6 +294,14 @@ op07:
 op0b:
 op0c:
 op0f:
+op12:
+op13:
+op14:
+op17:
+op1a:
+op1b:
+op1c:
+op1f:
   _nop
   _decode
 
@@ -309,7 +351,6 @@ op0a:  // ASL - Accumulator
 op0d:  // ORA - Absolute
   _fromAbsb
   _lop orrs
-  _toAddr
   _decode
 
 op0e:  // ASL - Absolute
@@ -318,39 +359,50 @@ op0e:  // ASL - Absolute
   _toAddr
   _decode
 
-op10:
-  b    quit
-op11:
-  b    quit
-op12:
-  b    quit
-op13:
-  b    quit
-op14:
-  b    quit
-op15:
-  b    quit
-op16:
-  b    quit
-op17:
-  b    quit
+op10:  // BPL (N==0)
+  movs r0, #FLAG_N
+  tst  SR, r0
+  bne 1f
+  _bxx
+1:
+  _decode
+
+op11:  // ORA - (Indirect), Y
+  _fromIndirectIndex
+  _lop orrs
+  _decode
+
+op15:  // ORA - Zero Page, X
+  _fromZeroIndex RX
+  _lop orrs
+  _decode
+
+op16:  // ASL - Zero Page, X
+  _fromZeroIndex RX
+  _asl
+  _toAddr
+  _decode
+
 op18:  // CLC
   _clx FLAG_C
   _decode
-op19:
-  b    quit
-op1a:
-  b    quit
-op1b:
-  b    quit
-op1c:
-  b    quit
-op1d:
-  b    quit
-op1e:
-  b    quit
-op1f:
-  b    quit
+
+op19:  // ORA - Absolute, Y
+  _fromAbsoluteIndexed RY
+  _lop orrs
+  _decode
+
+op1d:  // ORA - Absolute, X
+  _fromAbsoluteIndexed RX
+  _lop orrs
+  _decode
+
+op1e:  // ASL - Absolute, X
+  _fromAbsoluteIndexed RX
+  _asl
+  _toAddr
+  _decode
+
 op20:  // JSR
   adds T0, PC, #2
   _pushw T0
@@ -358,6 +410,7 @@ op20:  // JSR
   _ldw
   mov  PC, r0
   _decode
+
 op21:
   b    quit
 op22:
