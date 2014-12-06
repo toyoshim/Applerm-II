@@ -444,6 +444,14 @@ op44:
 op47:
 op4b:
 op4f:
+op52:
+op53:
+op54:
+op57:
+op5a:
+op5b:
+op5c:
+op5f:
   _nop
   _decode
 
@@ -704,39 +712,50 @@ op4e:  // LSR - Absolute
   _toAddr
   _decode
 
-op50:
-  b    quit
-op51:
-  b    quit
-op52:
-  b    quit
-op53:
-  b    quit
-op54:
-  b    quit
-op55:
-  b    quit
-op56:
-  b    quit
-op57:
-  b    quit
+op50:  // BVC (V==0)
+  movs r0, #FLAG_V
+  tst  SR, r0
+  bne 1f
+  _bxx
+1:
+  _decode
+
+op51:  // EOR - (Indirect), Y
+  _fromIndirectIndex
+  _lop eors
+  _decode
+
+op55:  // EOR - Zero Page, X
+  _fromZeroIndex RX
+  _lop eors
+  _decode
+
+op56:  // LSR - Zero Page, X
+  _fromZeroIndex RX
+  _lsr
+  _toAddr
+  _decode
+
 op58:  // CLI
   _clx FLAG_I
   _decode
-op59:
-  b    quit
-op5a:
-  b    quit
-op5b:
-  b    quit
-op5c:
-  b    quit
-op5d:
-  b    quit
-op5e:
-  b    quit
-op5f:
-  b    quit
+
+op59:  // EOR - Absolute, Y
+  _fromAbsoluteIndexed RY
+  _lop eors
+  _decode
+
+op5d:  // EOR - Absolute, X
+  _fromAbsoluteIndexed RX
+  _lop eors
+  _decode
+
+op5e:  // LSR - Absolute, X
+  _fromAbsoluteIndexed RX
+  _lsr
+  _toAddr
+  _decode
+
 op60:
   b    quit
 op61:
