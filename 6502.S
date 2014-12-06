@@ -17,6 +17,7 @@
 #define RX r9
 #define RY r10
 #define SP r11
+#define TZ r12
 #define ADDR r12
 
 #define FLAG_N (1 << 7)
@@ -184,10 +185,38 @@
   _ldb
 .endm
 
+.macro _toAbsb
+  adds r0, PC, #1
+  _ldw
+  mov  r1, T0
+  _stb
+  adds PC, PC, #2
+.endm
+
 .macro _toAddr
   mov  r0, ADDR
   mov  r1, T0
   _stb
+.endm
+
+.macro _toIndexedIndirect
+  adds r0, PC, #1
+  mov  r0, PC
+  _ldb
+  mov  r1, RX
+  adds r0, r0, R1
+  uxtb r0, r0
+  mov  T1, r0
+  _ldb
+  mov  TZ, r0
+  adds r0, T1, #1
+  uxtb r0, r0
+  _ldb
+  lsls r0, r0, #8
+  add  r0, r0, TZ
+  mov  r1, T0
+  _stb
+  adds PC, PC, #2
 .endm
 
 .macro _toReg reg
@@ -198,6 +227,7 @@
   _fromImmb
   mov  r1, T0
   _stb
+  adds PC, PC, #1
 .endm
 
 .macro __cl flag
@@ -279,6 +309,14 @@
   _fromImmb
   sxtb r0, r0
   add  PC, PC, r0
+.endm
+
+.macro _dec
+  mov  r0, RA
+  adds r0, r0, #1
+  mov  RA, r0
+  _flag_nz
+  adds PC, PC, #1
 .endm
 
 .macro _jmp
@@ -372,6 +410,13 @@
   mov  SR, r0
   _popw
   mov  PC, r0
+.endm
+
+.macro _t a b
+  mov  r0, \a
+  mov  \a, \b
+  mov  \b, r0
+  adds PC, PC, #1
 .endm
 
 .macro _resume
@@ -470,6 +515,13 @@ op7a:
 op7b:
 op7c:
 op7f:
+op80:
+op82:
+op83:
+op87:
+op89:
+op8b:
+op8f:
   _nop
   _decode
 
@@ -874,41 +926,51 @@ op7e:  // ROR - Absolute, X
   _ror
   _decode
 
-op80:
-  b    quit
-op81:
-  b    quit
-op82:
-  b    quit
-op83:
-  b    quit
+op81:  // STA - (Indirect, X)
+  mov  T0, RA
+  _toIndexedIndirect
+  _decode
+
 op84:  // STY - Zero Page
   mov  T0, RY
   _toZero
   _decode
 
-op85:
-  b    quit
-op86:
-  b    quit
-op87:
-  b    quit
-op88:
-  b    quit
-op89:
-  b    quit
-op8a:
-  b    quit
-op8b:
-  b    quit
-op8c:
-  b    quit
-op8d:
-  b    quit
-op8e:
-  b    quit
-op8f:
-  b    quit
+op85:  // STA - Zero Page
+  mov  T0, RA
+  _toZero
+  _decode
+
+op86:  // STX - Zero Page
+  mov  T0, RX
+  _toZero
+  _decode
+
+op88:  // DEY
+  _fromReg RY
+  _dec
+  _toReg RY
+  _decode
+
+op8a:  // TXA
+ _t    RX, RA
+  _decode
+
+op8c:  // STY - Absolute
+  mov  T0, RY
+  _toAbsb
+  _decode
+
+op8d:  // STA - Absolute
+  mov  T0, RA
+  _toAbsb
+  _decode
+
+op8e:  // STX - Absolute
+  mov  T0, RX
+  _toAbsb
+  _decode
+
 op90:
   b    quit
 op91:
