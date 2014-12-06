@@ -346,6 +346,10 @@
   add  PC, PC, r0
 .endm
 
+.macro _cp reg
+// TODO
+.endm
+
 .macro _dec
   mov  r0, RA
   adds r0, r0, #1
@@ -572,6 +576,11 @@ opb3:
 opb7:
 opbb:
 opbf:
+opc2:
+opc3:
+opc7:
+opcb:
+opcf:
   _nop
   _decode
 
@@ -1186,38 +1195,65 @@ opbe:  // LDX - Absolute, Y
   _ld  RX
   _decode
 
-opc0:
-  b    quit
-opc1:
-  b    quit
-opc2:
-  b    quit
-opc3:
-  b    quit
-opc4:
-  b    quit
-opc5:
-  b    quit
-opc6:
-  b    quit
-opc7:
-  b    quit
-opc8:
-  b    quit
-opc9:
-  b    quit
-opca:
-  b    quit
-opcb:
-  b    quit
-opcc:
-  b    quit
-opcd:
-  b    quit
-opce:
-  b    quit
-opcf:
-  b    quit
+opc0:  // CPY - Immediate
+  _fromImmb
+  _cp  RY
+  _decode
+
+opc1:  // CMP - (Indirect, X)
+  _fromIndexedIndirect
+  _cp  RA
+  _decode
+
+opc4:  // CPY - Zero Page
+  _fromZero
+  _cp  RY
+  _decode
+
+opc5:  // CMP - Zero Page
+  _fromZero
+  _cp  RA
+  _decode
+
+opc6:  // DEC - Zero Page
+  _fromZero
+  _dec
+  _toAddr
+  _decode
+
+opc8:  // INY
+  _fromReg RY
+  _dec
+  _toReg RY
+  _decode
+
+opc9:  // CMP - Immediate
+  _fromImmb
+  _cp  RA
+  _decode
+
+opca:  // DEX
+  _fromReg RX
+  _dec
+  _toReg RX
+  _decode
+
+opcc:  // CPY - Absolute
+  _fromAbsb
+  _cp  RY
+  _decode
+
+opcd:  // CMP - Absolute
+  _fromAbsb
+  _cp  RA
+  _decode
+
+opce:  // DEC - Absolute
+  _fromAbsb
+  _dec
+  _toAddr
+  _decode
+
 opd0:  // BNE (Z==0)
   movs r0, #FLAG_Z
   tst  SR, r0
@@ -1225,6 +1261,7 @@ opd0:  // BNE (Z==0)
   _bxx
 1:
   _decode
+
 opd1:
   b    quit
 opd2:
