@@ -83,6 +83,18 @@
   _ldb
 .endm
 
+.macro _popw
+  mov  T0, SP
+  adds r0, T0, #1
+  _ldb
+  mov  T1, r0
+  adds r0, T0, #2
+  mov  SP, r0
+  _ldb
+  lsls r0, r0, #8
+  adds r0, r0, T1
+.endm
+
 .macro _decode
   bl   dump
   mov  r0, PC
@@ -114,14 +126,14 @@
   _ldb
 .endm
 
-.macro _fromImm8
+.macro _fromImmb
   adds PC, PC, #1
   mov  r0, PC
   _ldb
 .endm
 
 .macro _fromIndexedIndirect
-  _fromImm8
+  _fromImmb
   mov  r1, RX
   adds r0, r0, R1
   uxtb r0, r0
@@ -138,7 +150,7 @@
 .endm
 
 .macro _fromIndirectIndex
-  _fromImm8
+  _fromImmb
   mov  T0, r0
   _ldb
   mov  T1, r0
@@ -158,14 +170,14 @@
 .endm
 
 .macro _fromZero
-  _fromImm8
+  _fromImmb
   mov  ADDR, r0
   _ldb
 .endm
 
 
 .macro _fromZeroIndex reg
-  _fromImm8
+  _fromImmb
   add  r0, r0, \reg
   uxtb r0, r0
   mov  ADDR, r0
@@ -183,7 +195,7 @@
 .endm
 
 .macro _toZero
-  _fromImm8
+  _fromImmb
   mov  r1, T0
   _stb
 .endm
@@ -260,9 +272,13 @@
 .endm
 
 .macro _bxx
-  _fromImm8
+  _fromImmb
   sxtb r0, r0
   add  PC, PC, r0
+.endm
+
+.macro _jmp
+  mov  PC, r0
 .endm
 
 .macro _ld reg
@@ -276,6 +292,25 @@
   \op  r0, r1, r0
   mov  RA, r0
   _flag_nz
+  adds PC, PC, #1
+.endm
+
+.macro _lsr
+  __cl (FLAG_N | FLAG_Z | FLAG_C)
+  movs r1, #0x01
+  tst  r0, r1
+  beq 1f
+  __se FLAG_C
+1:
+  lsrs r0, r0, #1
+  bne 1f
+  __se FLAG_Z
+1:
+  movs r1, #0x80
+  tst  r0, r1
+  beq 1f
+  __se FLAG_N
+1:
   adds PC, PC, #1
 .endm
 
@@ -326,6 +361,13 @@
   __se FLAG_N
 1:
   adds PC, PC, #1
+.endm
+
+.macro _rti
+  _popb
+  mov  SR, r0
+  _popw
+  mov  PC, r0
 .endm
 
 .macro _resume
@@ -396,6 +438,12 @@ op3a:
 op3b:
 op3c:
 op3f:
+op42:
+op43:
+op44:
+op47:
+op4b:
+op4f:
   _nop
   _decode
 
@@ -432,7 +480,7 @@ op08:  // PHP
   _decode
 
 op09:  // ORA - Immediate
-  _fromImm8
+  _fromImmb
   _lop orrs
   _decode
 
@@ -533,7 +581,7 @@ op28:  // PLP
   _decode
 
 op29:  // AND - Immediate
-  _fromImm8
+  _fromImmb
   _lop ands
   _decode
 
@@ -603,38 +651,59 @@ op3e:  // ROL - Absolute, X
   _toAddr
   _decode
 
-op40:
-  b    quit
-op41:
-  b    quit
-op42:
-  b    quit
-op43:
-  b    quit
-op44:
-  b    quit
-op45:
-  b    quit
-op46:
-  b    quit
-op47:
-  b    quit
-op48:
-  b    quit
-op49:
-  b    quit
-op4a:
-  b    quit
-op4b:
-  b    quit
-op4c:
-  b    quit
-op4d:
-  b    quit
-op4e:
-  b    quit
-op4f:
-  b    quit
+op40:  // RTI
+  _rti
+  _decode
+
+op41:  // EOR - (Indirect), X
+  _fromIndexedIndirect
+  _lop eors
+  _decode
+
+op45:  // EOR - Zero Page
+  _fromZero
+  _lop eors
+  _decode
+
+op46:  // LSR - Zero Page
+  _fromZero
+  _lsr
+  _toAddr
+  _decode
+
+op48:  // PHA
+  _pushb RA
+  adds PC, PC, #1
+  _decode
+
+op49:  // EOR - Immediate
+  _fromImmb
+  _lop eors
+  _decode
+
+op4a:  // LSR - Accumulator
+  _fromReg RA
+  _lsr
+  _toReg RA
+  _decode
+
+op4c:  // JMP - Absolute
+  adds r0, PC, #1
+  _ldw
+  _jmp
+  _decode
+
+op4d:  // EOR - Absolute
+  _fromAbsb
+  _lop eors
+  _decode
+
+op4e:  // LSR - Absolute
+  _fromAbsb
+  _lsr
+  _toAddr
+  _decode
+
 op50:
   b    quit
 op51:
@@ -801,13 +870,13 @@ op9e:
 op9f:
   b    quit
 opa0:  // LDY - Immediate
-  _fromImm8
+  _fromImmb
   _ld  RY
   _decode
 opa1:
   b    quit
 opa2:  // LDX - Immediate
-  _fromImm8
+  _fromImmb
   _ld  RX
   _decode
 opa3:
@@ -823,7 +892,7 @@ opa7:
 opa8:
   b    quit
 opa9:  // LDA - Immediate
-  _fromImm8
+  _fromImmb
   _ld  RA
   _decode
 opaa:
