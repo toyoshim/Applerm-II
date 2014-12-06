@@ -17,6 +17,7 @@
 #define RX r9
 #define RY r10
 #define SP r11
+#define ADDR r12
 
 #define FLAG_N (1 << 7)
 #define FLAG_V (1 << 6)
@@ -79,6 +80,14 @@
   b    decode
 .endm
 
+.macro _fromAbsb
+  adds PC, PC, #1
+  mov  r0, PC
+  _ldw
+  mov  ADDR, r0
+  _ldb
+.endm
+
 .macro _fromImm8
   adds PC, PC, #1
   mov  r0, PC
@@ -98,12 +107,28 @@
   _ldb
   lsls r0, r0, #8
   adds r0, r0, T1
+  mov  ADDR, r0
   _ldb
+.endm
+
+.macro _fromReg reg
+  mov  r0, \reg
 .endm
 
 .macro _fromZero
   _fromImm8
+  mov  ADDR, r0
   _ldb
+.endm
+
+.macro _toAddr
+  mov  r0, ADDR
+  mov  r1, T0
+  _stb
+.endm
+
+.macro _toReg reg
+  mov  \reg, T0
 .endm
 
 .macro _toZero
@@ -232,6 +257,9 @@ op02:
 op03:
 op04:
 op07:
+op0b:
+op0c:
+op0f:
   _nop
   _decode
 
@@ -259,7 +287,7 @@ op05:  // ORA - Zero Page
 op06:  // ASL - Zero Page
   _fromZero
   _asl
-  _toZero
+  _toAddr
   _decode
 
 op08:  // PHP
@@ -267,20 +295,29 @@ op08:  // PHP
   adds PC, PC, #1
   _decode
 
-op09:
-  b    quit
-op0a:
-  b    quit
-op0b:
-  b    quit
-op0c:
-  b    quit
-op0d:
-  b    quit
-op0e:
-  b    quit
-op0f:
-  b    quit
+op09:  // ORA - Immediate
+  _fromImm8
+  _lop orrs
+  _decode
+
+op0a:  // ASL - Accumulator
+  _fromReg RA
+  _asl
+  _toReg RA
+  _decode
+
+op0d:  // ORA - Absolute
+  _fromAbsb
+  _lop orrs
+  _toAddr
+  _decode
+
+op0e:  // ASL - Absolute
+  _fromAbsb
+  _asl
+  _toAddr
+  _decode
+
 op10:
   b    quit
 op11:
@@ -526,6 +563,7 @@ op84:  // STY - Zero Page
   mov  T0, RY
   _toZero
   _decode
+
 op85:
   b    quit
 op86:
