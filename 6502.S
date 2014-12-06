@@ -581,6 +581,14 @@ opc3:
 opc7:
 opcb:
 opcf:
+opd2:
+opd3:
+opd4:
+opd7:
+opda:
+opdb:
+opdc:
+opdf:
   _nop
   _decode
 
@@ -1262,37 +1270,42 @@ opd0:  // BNE (Z==0)
 1:
   _decode
 
-opd1:
-  b    quit
-opd2:
-  b    quit
-opd3:
-  b    quit
-opd4:
-  b    quit
-opd5:
-  b    quit
-opd6:
-  b    quit
-opd7:
-  b    quit
+opd1:  // CMP - (Indirect), Y
+  _fromIndirectIndex
+  _cp  RA
+  _decode
+
+opd5:  // CMP - Zero Page, X
+  _fromZeroIndex RX
+  _cp  RA
+  _decode
+
+opd6:  // DEC - Zero Page, X
+  _fromZeroIndex RX
+  _dec
+  _toAddr
+  _decode
+
 opd8:  // CLD
   _clx FLAG_D
   _decode
-opd9:
-  b    quit
-opda:
-  b    quit
-opdb:
-  b    quit
-opdc:
-  b    quit
-opdd:
-  b    quit
-opde:
-  b    quit
-opdf:
-  b    quit
+
+opd9:  // CMP - Absolute, Y
+  _fromAbsoluteIndexed RY
+  _cp  RA
+  _decode
+
+opdd:  // CMP - Absolute, X
+  _fromAbsoluteIndexed RX
+  _cp  RA
+  _decode
+
+opde:  // DEC - Absolute, X
+  _fromAbsoluteIndexed RX
+  _dec
+  _toAddr
+  _decode
+
 ope0:
   b    quit
 ope1:
