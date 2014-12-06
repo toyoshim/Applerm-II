@@ -462,6 +462,14 @@ op64:
 op67:
 op6b:
 op6f:
+op72:
+op73:
+op74:
+op77:
+op7a:
+op7b:
+op7c:
+op7f:
   _nop
   _decode
 
@@ -823,39 +831,49 @@ op6e:  // ROR - Absolute
   _toAddr
   _decode
 
-op70:
-  b    quit
-op71:
-  b    quit
-op72:
-  b    quit
-op73:
-  b    quit
-op74:
-  b    quit
-op75:
-  b    quit
-op76:
-  b    quit
-op77:
-  b    quit
+op70:  // BVS (V==1)
+  movs r0, #FLAG_V
+  tst  SR, r0
+  beq 1f
+  _bxx
+1:
+  _decode
+
+op71:  // ADC - (Indirect), Y
+  _fromIndirectIndex
+  _adc
+  _decode
+
+op75:  // ADC - Zero Page, X
+  _fromZeroIndex RX
+  _adc
+  _decode
+
+op76:  // ROR - Zero Page, X
+  _fromZeroIndex RX
+  _ror
+  _toAddr
+  _decode
+
 op78:  // SEI
   _sex FLAG_I
   _decode
-op79:
-  b    quit
-op7a:
-  b    quit
-op7b:
-  b    quit
-op7c:
-  b    quit
-op7d:
-  b    quit
-op7e:
-  b    quit
-op7f:
-  b    quit
+
+op79:  // ADC - Absolute, Y
+  _fromAbsoluteIndexed RY
+  _adc
+  _decode
+
+op7d:  // ADC - Absolute, X
+  _fromAbsoluteIndexed RX
+  _adc
+  _decode
+
+op7e:  // ROR - Absolute, X
+  _fromAbsoluteIndexed RX
+  _ror
+  _decode
+
 op80:
   b    quit
 op81:
