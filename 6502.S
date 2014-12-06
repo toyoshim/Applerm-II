@@ -388,6 +388,14 @@ op23:
 op27:
 op2b:
 op2f:
+op32:
+op33:
+op34:
+op37:
+op3a:
+op3b:
+op3c:
+op3f:
   _nop
   _decode
 
@@ -551,39 +559,50 @@ op2e:  // ROL - Absolute
   _toAddr
   _decode
 
-op30:
-  b    quit
-op31:
-  b    quit
-op32:
-  b    quit
-op33:
-  b    quit
-op34:
-  b    quit
-op35:
-  b    quit
-op36:
-  b    quit
-op37:
-  b    quit
+op30:  // BMI (N==1)
+  movs r0, #FLAG_N
+  tst  SR, r0
+  beq 1f
+  _bxx
+1:
+  _decode
+
+op31:  // AND - (Indirect), Y
+  _fromIndirectIndex
+  _lop ands
+  _decode
+
+op35:  // AND - Zero Page, X
+  _fromZeroIndex RX
+  _lop ands
+  _decode
+
+op36:  // ROL - Zero Page, X
+  _fromZeroIndex RX
+  _rol
+  _toAddr
+  _decode
+
 op38:  // SEC
   _sex FLAG_C
   _decode
-op39:
-  b    quit
-op3a:
-  b    quit
-op3b:
-  b    quit
-op3c:
-  b    quit
-op3d:
-  b    quit
-op3e:
-  b    quit
-op3f:
-  b    quit
+
+op39:  // AND - Absolute, Y
+  _fromAbsoluteIndexed RY
+  _lop ands
+  _decode
+
+op3d:  // AND - Absolute, X
+  _fromAbsoluteIndexed RX
+  _lop ands
+  _decode
+
+op3e:  // ROL - Absolute, X
+  _fromAbsoluteIndexed RX
+  _rol
+  _toAddr
+  _decode
+
 op40:
   b    quit
 op41:
