@@ -176,7 +176,6 @@
   _ldb
 .endm
 
-
 .macro _fromZeroIndex reg
   _fromImmb
   add  r0, r0, \reg
@@ -190,7 +189,16 @@
   _ldw
   mov  r1, T0
   _stb
-  adds PC, PC, #2
+  adds PC, PC, #3
+.endm
+
+.macro _toAbsoluteIndexed reg
+  adds r0, PC, #1
+  _ldw
+  add  r0, r0, \reg
+  mov  r1, T0
+  _stb
+  adds PC, PC, #3
 .endm
 
 .macro _toAddr
@@ -201,7 +209,6 @@
 
 .macro _toIndexedIndirect
   adds r0, PC, #1
-  mov  r0, PC
   _ldb
   mov  r1, RX
   adds r0, r0, R1
@@ -219,15 +226,43 @@
   adds PC, PC, #2
 .endm
 
+.macro _toIndirectIndex
+  adds r0, PC, #1
+  _ldb
+  mov  T1, r0
+  _ldb
+  mov  TZ, r0
+  adds r0, T1, #1
+  uxtb r0, r0
+  _ldb
+  lsls r0, r0, #8
+  add  r0, r0, TZ
+  add  r0, r0, RY
+  mov  r1, T0
+  _stb
+  adds PC, PC, #2
+.endm
+
 .macro _toReg reg
   mov  \reg, T0
 .endm
 
 .macro _toZero
-  _fromImmb
+  adds r0, PC, #1
+  _ldb
   mov  r1, T0
   _stb
-  adds PC, PC, #1
+  adds PC, PC, #2
+.endm
+
+.macro _toZeroIndex reg
+  adds r0, PC, #1
+  _ldb
+  add  r0, r0, \reg
+  uxtb r0, r0
+  mov  r1, T0
+  _stb
+  adds PC, PC, #2
 .endm
 
 .macro __cl flag
@@ -271,16 +306,16 @@
   __cl (FLAG_N | FLAG_Z | FLAG_C)
   movs r1, #0x80
   tst  r0, r1
-  beq 1f
+  beq  1f
   bics r0, r0, r1
   __se FLAG_C
 1:
   lsls r0, r0, #1
-  bne 1f
+  bne  1f
   __se FLAG_Z
 1:
   tst  r0, r1
-  beq 1f
+  beq  1f
   __se FLAG_N
 1:
   adds PC, PC, #1
@@ -290,17 +325,17 @@
   __cl (FLAG_N | FLAG_Z | FLAG_V)
   mov  r1, RA
   ands r0, r1, r0
-  bne 1f
+  bne  1f
   __se FLAG_Z
 1:
   movs r1, #0x80
   tst  r0, r1
-  beq 1f
+  beq  1f
   __se FLAG_N
 1:
   movs r1, #0x40
   tst  r0, r1
-  beq 1f
+  beq  1f
   __se FLAG_V
 1:
 .endm
@@ -341,16 +376,16 @@
   __cl (FLAG_N | FLAG_Z | FLAG_C)
   movs r1, #0x01
   tst  r0, r1
-  beq 1f
+  beq  1f
   __se FLAG_C
 1:
   lsrs r0, r0, #1
-  bne 1f
+  bne  1f
   __se FLAG_Z
 1:
   movs r1, #0x80
   tst  r0, r1
-  beq 1f
+  beq  1f
   __se FLAG_N
 1:
   adds PC, PC, #1
@@ -366,17 +401,17 @@
   __cl (FLAG_N | FLAG_Z | FLAG_C)
   movs r1, #0x80
   tst  r0, r1
-  beq 1f
+  beq  1f
   __se FLAG_C
 1:
   lsls r0, r0, #1
   uxtb r0, r0
   adds r0, r0, r2
-  bne 1f
+  bne  1f
   __se FLAG_Z
 1:
   tst  r0, r1
-  beq 1f
+  beq  1f
   __se FLAG_N
 1:
   adds PC, PC, #1
@@ -389,17 +424,17 @@
   __cl (FLAG_N | FLAG_Z | FLAG_C)
   movs r1, #0x01
   tst  r0, r1
-  beq 1f
+  beq  1f
   __se FLAG_C
 1:
   lsrs r0, r0, #1
   adds r0, r0, r2
-  bne 1f
+  bne  1f
   __se FLAG_Z
 1:
   movs r1, #0x80
   tst  r0, r1
-  beq 1f
+  beq  1f
   __se FLAG_N
 1:
   adds PC, PC, #1
@@ -522,6 +557,16 @@ op87:
 op89:
 op8b:
 op8f:
+op93:
+op97:
+op9b:
+op9c:
+op9e:
+op9f:
+opa3:
+opa7:
+opab:
+opaf:
   _nop
   _decode
 
@@ -582,7 +627,7 @@ op0e:  // ASL - Absolute
 op10:  // BPL (N==0)
   movs r0, #FLAG_N
   tst  SR, r0
-  bne 1f
+  bne  1f
   _bxx
 1:
   _decode
@@ -688,7 +733,7 @@ op2e:  // ROL - Absolute
 op30:  // BMI (N==1)
   movs r0, #FLAG_N
   tst  SR, r0
-  beq 1f
+  beq  1f
   _bxx
 1:
   _decode
@@ -785,7 +830,7 @@ op4e:  // LSR - Absolute
 op50:  // BVC (V==0)
   movs r0, #FLAG_V
   tst  SR, r0
-  bne 1f
+  bne  1f
   _bxx
 1:
   _decode
@@ -886,7 +931,7 @@ op6e:  // ROR - Absolute
 op70:  // BVS (V==1)
   movs r0, #FLAG_V
   tst  SR, r0
-  beq 1f
+  beq  1f
   _bxx
 1:
   _decode
@@ -953,7 +998,7 @@ op88:  // DEY
   _decode
 
 op8a:  // TXA
- _t    RX, RA
+  _t   RX, RA
   _decode
 
 op8c:  // STY - Absolute
@@ -971,76 +1016,115 @@ op8e:  // STX - Absolute
   _toAbsb
   _decode
 
-op90:
-  b    quit
-op91:
-  b    quit
-op92:
-  b    quit
-op93:
-  b    quit
-op94:
-  b    quit
-op95:
-  b    quit
-op96:
-  b    quit
-op97:
-  b    quit
-op98:
-  b    quit
-op99:
-  b    quit
-op9a:
-  b    quit
-op9b:
-  b    quit
-op9c:
-  b    quit
-op9d:
-  b    quit
-op9e:
-  b    quit
-op9f:
-  b    quit
+op90:  // BCC (C==0)
+  movs r0, #FLAG_C
+  tst  SR, r0
+  bne  1f
+  _bxx
+1:
+  _decode
+
+op91:  // STA - (Indirect), Y
+  mov  T0, RA
+  _toIndirectIndex
+  _decode
+
+op92:  // STA - Zero Page, X
+  mov  T0, RA
+  _toZeroIndex RX
+  _decode
+
+op94:  // STY - Zero Page, X
+  mov  T0, RY
+  _toZeroIndex RX
+  _decode
+
+op95:  // STA - Zero Page, X
+  mov  T0, RA
+  _toZeroIndex RX
+  _decode
+
+op96:  // STX - Zero Page, Y
+  mov  T0, RX
+  _toZeroIndex RY
+  _decode
+
+op98:  // TYA
+  _t   RY, RA
+  _decode
+
+op99:  // STA - Absolute, Y
+  mov  T0, RA
+  _toAbsoluteIndexed RY
+  _decode
+
+op9a:  // TXS
+  _t   RX, SR
+  _decode
+
+op9d:  // STA - Absolute, X
+  mov  T0, RA
+  _toAbsoluteIndexed RX
+  _decode
+
 opa0:  // LDY - Immediate
   _fromImmb
   _ld  RY
   _decode
-opa1:
-  b    quit
+
+opa1:  // LDA - (Indirect, X)
+  _fromIndexedIndirect
+  _ld  RA
+  _decode
+
 opa2:  // LDX - Immediate
   _fromImmb
   _ld  RX
   _decode
-opa3:
-  b    quit
-opa4:
-  b    quit
-opa5:
-  b    quit
-opa6:
-  b    quit
-opa7:
-  b    quit
-opa8:
-  b    quit
+
+opa4:  // LDY - Zero Page
+  _fromZero
+  _ld  RY
+  _decode
+
+opa5:  // LDA - Zero Page
+  _fromZero
+  _ld  RA
+  _decode
+
+opa6:  // LDX - Zero Page
+  _fromZero
+  _ld  RX
+  _decode
+
+opa8:  // TAY
+  _t   RA, RY
+  _decode
+
 opa9:  // LDA - Immediate
   _fromImmb
   _ld  RA
   _decode
-opaa:
-  b    quit
-opab:
-  b    quit
-opac:
-  b    quit
-opad:
-  b    quit
-opae:
-  b    quit
-opaf:
-  b    quit
+
+opaa:  // TAX
+  _t   RA, RX
+  _decode
+
+opac:  // LDY - Absolute
+  _fromAbsb
+  _ld  RY
+  _decode
+
+opad:  // LDA - Absolute
+  _fromAbsb
+  _ld  RA
+  _decode
+
+opae:  // LDX - Absolute
+  _fromAbsb
+  _ld  RX
+  _decode
+
 opb0:
   b    quit
 opb1:
