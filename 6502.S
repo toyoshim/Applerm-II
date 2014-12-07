@@ -454,26 +454,23 @@
 .endm
 
 .macro _cp reg
-  prn r0
-  prn \reg
   __cl (FLAG_N | FLAG_Z | FLAG_C)
   mov  r1, \reg
+  subs r2, r1, r0
+  sxtb r2, r2
   subs r0, r1, r0
-  beq  1f
-  bcc  3f
+  bmi 1f
   __se FLAG_C
-  b    3f
 1:
-  bcc  2f
-  __se FLAG_C
-2:
-  __se FLAG_Z
-3:
-  movs r1, #FLAG_N
-  tst  r0, r1
-  beq  1f
+  sxtb r0, r0
+  movs r0, r0
+  bpl  1f
   __se FLAG_N
+  b    2f
 1:
+  bne  2f
+  __se FLAG_Z
+2:
   adds PC, PC, #1
 .endm
 
