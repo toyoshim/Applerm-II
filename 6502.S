@@ -947,9 +947,9 @@ op25:  // AND - Zero Page
   _lop ands
   _decode
 
-op26:  // ROR - Zero Page
+op26:  // ROL - Zero Page
   _fromZero
-  _ror
+  _rol
   _toAddr
   _decode
 
