@@ -47,7 +47,7 @@ test: 6502.S test.c
 # Test binary that runs on qemu user mode emulation for functional tests
 ftest: 6502.S ftest.c
 	$(CC) -mthumb -static $(FRAMEPTR) ftest.c 6502.S -o ftest && \
-		qemu-arm ftest
+		qemu-arm ftest 2> flog
 
 # Assume a CQ Mary comaptible board.
 run: $(APP).bin

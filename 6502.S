@@ -965,9 +965,9 @@ op29:  // AND - Immediate
   _lop ands
   _decode
 
-op2a:  // ROR - Accumulator
+op2a:  // ROL - Accumulator
   _fromReg RA
-  _ror
+  _rol
   _toReg RA
   _decode
 
