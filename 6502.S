@@ -400,6 +400,7 @@
   beq  1f
   __se FLAG_V
 1:
+  adds PC, PC, #1
 .endm
 
 .macro _bxc reg
@@ -446,6 +447,7 @@
   beq  1f
   __se FLAG_N
 1:
+  adds PC, PC, #1
 .endm
 
 .macro _dec
