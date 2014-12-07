@@ -11,7 +11,7 @@ static uint32_t keyCount = 0;
 static uint8_t last = 0x00;
 
 void prn(int c) {
-  uint8_t fp;
+  uint32_t fp;
   __asm__("movs %0, r12": "=r"(fp));
   fprintf(stderr, "### $%02x ###\n", c);
   fflush(stderr);
@@ -20,7 +20,7 @@ void prn(int c) {
 
 void cpu6502_dump(uint32_t pc, uint32_t a, uint32_t x, uint32_t y,
                   uint32_t sp, uint32_t sr) {
-  uint8_t fp;
+  uint32_t fp;
   __asm__("movs %0, r12": "=r"(fp));
   assert(pc < 0x10000);
   assert(a < 0x100);
@@ -37,7 +37,7 @@ void cpu6502_dump(uint32_t pc, uint32_t a, uint32_t x, uint32_t y,
 }
 
 uint8_t cpu6502_load(uint16_t addr) {
-  uint8_t fp;
+  uint32_t fp;
   uint8_t result = 0;
   __asm__("movs %0, r12": "=r"(fp));
   if (0x0400 <= addr && addr <= 0x7ff) {
@@ -83,7 +83,7 @@ uint8_t cpu6502_load(uint16_t addr) {
 }
 
 void cpu6502_store(uint16_t addr, uint8_t data) {
-  uint8_t fp;
+  uint32_t fp;
   __asm__("movs %0, r12": "=r"(fp));
   if (0x0400 <= addr && addr <= 0x7ff) {
     // Fake text VRAM.

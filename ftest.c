@@ -17,7 +17,7 @@ void prn(int c) {
 
 void cpu6502_dump(uint32_t pc, uint32_t a, uint32_t x, uint32_t y,
                   uint32_t sp, uint32_t sr) {
-  uint8_t fp;
+  uint32_t fp;
   __asm__("movs %0, r12": "=r"(fp));
   fprintf(stderr, "*** dump *** PC=$%04x A=$%02x X=$%02x Y=$%02x SP=$%02x "
           "NV-B_DIZC=%d%d-%d_%d%d%d%d\n",
@@ -34,7 +34,7 @@ void cpu6502_dump(uint32_t pc, uint32_t a, uint32_t x, uint32_t y,
 }
 
 uint8_t cpu6502_load(uint16_t addr) {
-  uint8_t fp;
+  uint32_t fp;
   uint8_t result = 0;
   __asm__("movs %0, r12": "=r"(fp));
   result = mem[addr];
@@ -45,7 +45,7 @@ uint8_t cpu6502_load(uint16_t addr) {
 }
 
 void cpu6502_store(uint16_t addr, uint8_t data) {
-  uint8_t fp;
+  uint32_t fp;
   __asm__("movs %0, r12": "=r"(fp));
   mem[addr] = data;
   fprintf(stderr, "store $%04x <= $%02x\n", addr, data);

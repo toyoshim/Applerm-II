@@ -1214,6 +1214,7 @@ op7d:  // ADC - Absolute, X
 op7e:  // ROR - Absolute, X
   _fromAbsoluteIndexed RX
   _ror
+  _toAddr
   _decode
 
 op81:  // STA - (Indirect, X)
