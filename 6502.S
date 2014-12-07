@@ -12,6 +12,7 @@
 .extern prn
 .macro prn reg
   push {r0-r3}
+  mov  r0, \reg
   bl   prn
   pop  {r0-r3}
 .endm
@@ -367,7 +368,7 @@
   beq  1f
   __se FLAG_N
 1:
-  lsrs r1, r1, #17
+  lsrs r1, r1, #9
   bcc  1f
   __se FLAG_C
 1:
@@ -626,7 +627,7 @@
   beq  1f
   __se FLAG_N
 1:
-  lsrs r1, r1, #17
+  lsrs r1, r1, #9
   bcs  1f
   __se FLAG_C
 1:
