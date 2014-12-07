@@ -452,6 +452,8 @@
 .endm
 
 .macro _cp reg
+  prn r0
+  prn \reg
   __cl (FLAG_N | FLAG_Z | FLAG_C)
   mov  r1, \reg
   subs r0, r1, r0
@@ -1372,6 +1374,9 @@ opb9:  // LDA - Absolute, Y
 
 opba:  // TSX
   _t   SP, RX
+  mov  r0, RX
+  uxtb r0, r0
+  mov  RX, r0
   _decode
 
 opbc:  // LDY - Absolute, X
