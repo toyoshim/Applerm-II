@@ -1525,7 +1525,7 @@ ope6:  // INC - Zero Page
 ope8:  // INX
   _fromReg RX
   _inc
-  _toAddr
+  _toReg RX
   _decode
 
 ope9:  // SBC - Immediate

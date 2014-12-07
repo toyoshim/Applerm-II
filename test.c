@@ -20,7 +20,7 @@ void cpu6502_dump(uint32_t pc, uint32_t a, uint32_t x, uint32_t y,
                   uint32_t sp, uint32_t sr) {
   uint8_t fp;
   __asm__("movs %0, r12": "=r"(fp));
-  assert(pc < 0x1000);
+  assert(pc < 0x10000);
   assert(a < 0x100);
   assert(x < 0x100);
   assert(y < 0x100);
