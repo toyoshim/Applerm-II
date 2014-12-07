@@ -311,7 +311,7 @@
   add  r1, r1, r0
   movs r2, #FLAG_C
   tst  SR, r2
-  bne  1f
+  beq  1f
   adds r1, r1, #1
 1:
   movs r2, #FLAG_D
@@ -359,6 +359,7 @@
   lsrs r0, r0, #8
   bcc 1f
   __se FLAG_V
+1:
   mov  RA, r2
   adds PC, PC, #1
 .endm
@@ -563,7 +564,7 @@
   subs r1, r1, r0
   movs r2, #FLAG_C
   tst  SR, r2
-  beq  1f
+  bne  1f
   subs r1, r1, #1
 1:
   movs r2, #FLAG_D
