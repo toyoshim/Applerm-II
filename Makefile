@@ -42,7 +42,7 @@ $(ROM).rom:
 # Test binary that runs on qemu user mode emulation for testing
 test: 6502.S test.c
 	$(CC) -mthumb -static $(FRAMEPTR) test.c 6502.S -o test && \
-		qemu-arm test
+		reset && qemu-arm test 2> log
 
 # Test binary that runs on qemu user mode emulation for functional tests
 ftest: 6502.S ftest.c

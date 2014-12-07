@@ -245,11 +245,10 @@
   _ldb
 .endm
 
-.macro _toAbsb
+.macro _toAbsolute reg
   adds r0, PC, #1
-  mov TZ, T0
   _ldw
-  mov  r1, TZ
+  mov  r1, \reg
   _stb
   adds PC, PC, #3
 .endm
@@ -258,7 +257,7 @@
   adds r0, PC, #1
   _ldw
   add  r0, r0, \reg
-  mov  r1, T0
+  mov  r1, RA
   _stb
   adds PC, PC, #3
 .endm
@@ -1248,18 +1247,15 @@ op8a:  // TXA
   _decode
 
 op8c:  // STY - Absolute
-  mov  T0, RY
-  _toAbsb
+  _toAbsolute RY
   _decode
 
 op8d:  // STA - Absolute
-  mov  T0, RA
-  _toAbsb
+  _toAbsolute RA
   _decode
 
 op8e:  // STX - Absolute
-  mov  T0, RX
-  _toAbsb
+  _toAbsolute RX
   _decode
 
 op90:  // BCC (C==0)
@@ -1296,7 +1292,6 @@ op98:  // TYA
   _decode
 
 op99:  // STA - Absolute, Y
-  mov  T0, RA
   _toAbsoluteIndexed RY
   _decode
 
@@ -1309,7 +1304,6 @@ op9a:  // TXS
   _decode
 
 op9d:  // STA - Absolute, X
-  mov  T0, RA
   _toAbsoluteIndexed RX
   _decode
 
