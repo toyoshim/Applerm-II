@@ -404,7 +404,7 @@
 .endm
 
 .macro _bxc reg
-  adds PC, PC, #1
+  adds PC, PC, #2
   movs r0, #\reg
   tst  SR, r0
   bne  1f
@@ -413,7 +413,7 @@
 .endm
 
 .macro _bxs reg
-  adds PC, PC, #1
+  adds PC, PC, #2
   movs r0, #\reg
   tst  SR, r0
   beq  1f
@@ -422,7 +422,7 @@
 .endm
 
 .macro _bxx
-  mov  r0, PC
+  subs r0, PC, #1
   _ldb
   sxtb r0, r0
   add  PC, PC, r0
@@ -619,10 +619,8 @@
   adds PC, PC, #1
 .endm
 
-.macro _t a b
-  mov  r0, \a
-  mov  \a, \b
-  mov  \b, r0
+.macro _t from to
+  mov  \to, \from
   adds PC, PC, #1
 .endm
 
