@@ -645,7 +645,9 @@
 .endm
 
 .macro _t from to
-  mov  \to, \from
+  mov  r0, \from
+  mov  \to, r0
+  _flag_nz
   adds PC, PC, #1
 .endm
 
@@ -1369,7 +1371,7 @@ opb9:  // LDA - Absolute, Y
   _decode
 
 opba:  // TSX
-  _t   SR, RX
+  _t   SP, RX
   _decode
 
 opbc:  // LDY - Absolute, X
@@ -1913,6 +1915,8 @@ op_table:
   .long opff
 
   .bss
+  .global cpu6502_pc
+cpu6502_pc:
 r_pc: .long 0
 r_a:  .long 0
 r_x:  .long 0

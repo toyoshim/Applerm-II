@@ -11,6 +11,7 @@ SPEED	= 115200
 #SPEED	= 9600
 CLOCK	= 12000
 ROM	= applebasic
+//ROM	= apple2o
 ROMOBJ	= $(ROM).o
 ROMFLAG	= -I binary -O elf32-littlearm -B arm --rename-section .data=.rodata
 FRAMEPTR= -fomit-frame-pointer
@@ -40,7 +41,13 @@ $(ROM).rom:
 
 # Test binary that runs on qemu user mode emulation for testing
 test: 6502.S test.c
-	$(CC) -mthumb -static $(FRAMEPTR) test.c 6502.S -o test && qemu-arm test
+	$(CC) -mthumb -static $(FRAMEPTR) test.c 6502.S -o test && \
+		qemu-arm test
+
+# Test binary that runs on qemu user mode emulation for functional tests
+ftest: 6502.S ftest.c
+	$(CC) -mthumb -static $(FRAMEPTR) ftest.c 6502.S -o ftest && \
+		qemu-arm ftest
 
 # Assume a CQ Mary comaptible board.
 run: $(APP).bin

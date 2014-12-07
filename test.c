@@ -100,6 +100,7 @@ void cpu6502_store(uint16_t addr, uint8_t data) {
 
 int main(int argc, char** argv) {
   FILE* fp = fopen("applebasic.rom", "rb");
+  //FILE* fp = fopen("apple2o.rom", "rb");
   memset(mem, 0, 0x10000);
   fread(&mem[0xd000], 1, 0x3000, fp);
   fclose(fp);
