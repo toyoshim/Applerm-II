@@ -812,6 +812,7 @@ op00:  // BRK
   adds r0, r0, #0xfe
   _ldw
   mov  PC, r0
+  __se FLAG_I
   _decode
 
 op01:  // ORA - (Indirect, X)
