@@ -451,20 +451,18 @@
 .endm
 
 .macro _dec
-  mov  r0, RA
-  adds r0, r0, #1
+  subs r0, r0, #1
   uxtb r0, r0
-  mov  RA, r0
   _flag_nz
+  mov  T0, r0
   adds PC, PC, #1
 .endm
 
 .macro _inc
-  mov  r0, RA
-  subs r0, r0, #1
+  adds r0, r0, #1
   uxtb r0, r0
-  mov  RA, r0
   _flag_nz
+  mov  T0, r0
   adds PC, PC, #1
 .endm
 
