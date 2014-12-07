@@ -120,7 +120,7 @@
 
 .macro _fromAbsb
   adds PC, PC, #2
-  mov  r0, PC
+  subs r0, PC, #1
   _ldw
   mov  ADDR, r0
   _ldb
@@ -128,7 +128,7 @@
 
 .macro _fromAbsoluteIndexed reg
   adds PC, PC, #2
-  mov  r0, PC
+  subs r0, PC, #1
   _ldw
   add  r0, r0, \reg
   mov  ADDR, r0
