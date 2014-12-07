@@ -372,14 +372,15 @@
   bics r0, r0, r1
   __se FLAG_C
 1:
-  lsls T0, r0, #1
+  lsls r0, r0, #1
   bne  1f
   __se FLAG_Z
 1:
-  tst  T0, r1
+  tst  r0, r1
   beq  1f
   __se FLAG_N
 1:
+  mov  T0, r0
   adds PC, PC, #1
 .endm
 
@@ -491,15 +492,16 @@
   beq  1f
   __se FLAG_C
 1:
-  lsrs T0, r0, #1
+  lsrs r0, r0, #1
   bne  1f
   __se FLAG_Z
 1:
   movs r1, #FLAG_N
-  tst  T0, r1
+  tst  r0, r1
   beq  1f
   __se FLAG_N
 1:
+  mov  T0, r0
   adds PC, PC, #1
 .endm
 
@@ -518,14 +520,15 @@
 1:
   lsls r0, r0, #1
   uxtb r0, r0
-  adds T0, r0, r2
+  adds r0, r0, r2
   bne  1f
   __se FLAG_Z
 1:
-  tst  T0, r1
+  tst  r0, r1
   beq  1f
   __se FLAG_N
 1:
+  mov  T0, r0
   adds PC, PC, #1
 .endm
 
@@ -540,15 +543,16 @@
   __se FLAG_C
 1:
   lsrs r0, r0, #1
-  adds T0, r0, r2
+  adds r0, r0, r2
   bne  1f
   __se FLAG_Z
 1:
   movs r1, #FLAG_N
-  tst  T0, r1
+  tst  r0, r1
   beq  1f
   __se FLAG_N
 1:
+  mov  T0, r0
   adds PC, PC, #1
 .endm
 
