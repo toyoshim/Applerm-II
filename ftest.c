@@ -38,7 +38,7 @@ uint8_t cpu6502_load(uint16_t addr) {
   uint8_t result = 0;
   __asm__("movs %0, r12": "=r"(fp));
   result = mem[addr];
-  fprintf(stderr, "load  $%04x => $%02x\n", addr, result);
+  //fprintf(stderr, "load  $%04x => $%02x\n", addr, result);
   fflush(stderr);
   __asm__("movs r12, %0":: "r"(fp));
   return result;
@@ -48,7 +48,7 @@ void cpu6502_store(uint16_t addr, uint8_t data) {
   uint32_t fp;
   __asm__("movs %0, r12": "=r"(fp));
   mem[addr] = data;
-  fprintf(stderr, "store $%04x <= $%02x\n", addr, data);
+  //fprintf(stderr, "store $%04x <= $%02x\n", addr, data);
   fflush(stderr);
   __asm__("movs r12, %0":: "r"(fp));
 }

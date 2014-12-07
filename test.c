@@ -20,6 +20,7 @@ void prn(int c) {
 
 void cpu6502_dump(uint32_t pc, uint32_t a, uint32_t x, uint32_t y,
                   uint32_t sp, uint32_t sr) {
+  /*
   uint32_t fp;
   __asm__("movs %0, r12": "=r"(fp));
   assert(pc < 0x10000);
@@ -34,6 +35,7 @@ void cpu6502_dump(uint32_t pc, uint32_t a, uint32_t x, uint32_t y,
           (sr >> 3) & 1, (sr >> 2) & 1, (sr >> 1) & 1, sr & 1);
   fflush(stderr);
   __asm__("movs r12, %0":: "r"(fp));
+  */
 }
 
 uint8_t cpu6502_load(uint16_t addr) {
@@ -57,16 +59,15 @@ uint8_t cpu6502_load(uint16_t addr) {
     // I/O emulation.
     if (0xc000 == addr) {
       keyCount++;
-      if (keyCount < 100000)
+      if (keyCount < 0x800) {
         result = key;
-      else if (keyCount & 0xffff)
+      } else if (keyCount & 0xff) {
         result = key;
-      else {
-        uint32_t n = (keyCount - 100000) >> 16;
-        if (n >= sizeof(keyString))
-          result = key;
-        else
-          result = keyString[n] | 0x80;
+      } else {
+        uint32_t n = (keyCount - 0x800) >> 8;
+        if (n < sizeof(keyString))
+          key = keyString[n] | 0x80;
+        result = key;
       }
     } else if (0xc010 == addr) {
       key &= 0x7f;
@@ -99,18 +100,24 @@ void cpu6502_store(uint16_t addr, uint8_t data) {
       x -= 0x28;
       y += 0x08;
     }
-    if (y < 24)
-      printf("\e[%d;%dH%c", y + 2, x + 1, ascii[data & 0x3f]);
+    if (y < 24) {
+      fprintf(stdout, "\e[%d;%dH%c", y + 7, x + 1, ascii[data & 0x3f]);
+      fflush(stdout);
+    }
   } else if ((0x0300 <= addr && addr <= 0x03ff) ||
              (0x0900 <= addr && addr <= 0x0fff)) {
     // Fake memory impl to make it run on low memory chip.
     last = data;
-  } else if (0x1000 <= addr & addr < 0xcfff) {
+  } else if (0x1000 <= addr & addr < 0xbfff) {
     // Bus error due to minimum memory installation.
     return;
     fprintf(stdout, "\e[1;1Hinvalid store $%04x\n", addr);
     fflush(stdout);
     abort();
+  } else if (0xc000 <= addr & addr < 0xcfff) {
+    // I/O emulation.
+    if (0xc000 == addr)
+      key = data;
   } else {
     // Installed memory.
     mem[addr] = data;
