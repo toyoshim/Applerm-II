@@ -429,9 +429,9 @@
 .endm
 
 .macro _cp reg
+  __cl (FLAG_N | FLAG_Z | FLAG_C)
   mov  r1, \reg
   subs r0, r1, r0
-  __cl (FLAG_N | FLAG_Z | FLAG_C)
   beq  1f
   bcc  3f
   __se FLAG_C
