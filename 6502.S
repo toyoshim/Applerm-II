@@ -1405,10 +1405,9 @@ opb9:  // LDA - Absolute, Y
   _decode
 
 opba:  // TSX
-  _t   SP, RX
-  mov  r0, RX
+  mov  r0, SP
   uxtb r0, r0
-  mov  RX, r0
+  _t   r0, RX
   _decode
 
 opbc:  // LDY - Absolute, X
