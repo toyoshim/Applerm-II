@@ -532,7 +532,61 @@
 .endm
 
 .macro _sbc
-// TODO
+  mov  r1, RA
+  subs r1, r1, r0
+  movs r2, #FLAG_C
+  tst  SR, r2
+  beq  1f
+  subs r1, r1, #1
+1:
+  movs r2, #FLAG_D
+  tst  SR, r2
+  beq  1f
+  movs r2, #0x1f
+  ands r1, r1, r2
+  mov  T0, RA
+  lsrs T0, T0, #8
+  mov  T1, r0
+  lsrs T1, T1, #8
+  subs r2, T0, T1
+  cmp  r1, #10
+  blo  2f
+  subs r1, r1, #6
+  subs r2, r2, #1
+2:
+  movs r3, #0x1f
+  ands r2, r2, r3
+  cmp  r2, #10
+  blo  2f
+  adds r2, r2, #6
+2:
+  lsls r2, r2, #8
+  adds r1, r1, r2
+1:
+  __cl (FLAG_N | FLAG_Z | FLAG_C | FLAG_V)
+  uxtb r2, r1
+  movs r2, r2
+  bne  1f
+  __se FLAG_Z
+1:
+  movs r3, #FLAG_N
+  tst  r2, r3
+  beq  1f
+  __se FLAG_N
+1:
+  lsrs r1, r1, #17
+  bcc  1f
+  __se FLAG_C
+1:
+  mov  r1, RA
+  eors r0, r1, r0
+  eors r1, r1, r2
+  ands r0, r0, r1
+  lsrs r0, r0, #8
+  bcc 1f
+  __se FLAG_V
+  mov  RA, r2
+  adds PC, PC, #1
 .endm
 
 .macro _t a b
