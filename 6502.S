@@ -12,9 +12,8 @@
 .extern prn
 .macro prn reg
   push {r0-r3}
-  mov r0, \reg
-  bl prn
-  pop {r0-r3}
+  bl   prn
+  pop  {r0-r3}
 .endm
 
 #define T0 r4
@@ -36,7 +35,18 @@
 #define FLAG_C (1 << 0)
 
 .macro _ldb
+.ifdef USE_FRAMEPOINTER
+  // If -fomit-frame-pointer is not specified, save and restore r12 here.
+  push {r1}
+  mov  r1, r12
+  push {r1}
+.endif
   bl   cpu6502_load
+.ifdef USE_FRAMEPOINTER
+  pop  {r1}
+  mov  r12, r1
+  pop  {r1}
+.endif
 .endm
 
 .macro _ldw
@@ -50,7 +60,17 @@
 .endm
 
 .macro _stb
+.ifdef USE_FRAMEPOINTER
+  push {r1}
+  mov  r1, r12
+  push {r1}
+.endif
   bl   cpu6502_store
+.ifdef USE_FRAMEPOINTER
+  pop  {r1}
+  mov  r12, r1
+  pop  {r1}
+.endif
 .endm
 
 .macro _stw
@@ -1244,7 +1264,10 @@ op99:  // STA - Absolute, Y
   _decode
 
 op9a:  // TXS
-  _t   RX, SR
+  _t   RX, SP
+  movs r0, #1
+  lsls r0, r0, #8
+  add  SP, SP, r0
   _decode
 
 op9d:  // STA - Absolute, X
