@@ -605,7 +605,7 @@
   __se FLAG_N
 1:
   lsrs r1, r1, #17
-  bcc  1f
+  bcs  1f
   __se FLAG_C
 1:
   mov  r1, RA
@@ -615,6 +615,7 @@
   lsrs r0, r0, #8
   bcc 1f
   __se FLAG_V
+1:
   mov  RA, r2
   adds PC, PC, #1
 .endm
