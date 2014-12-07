@@ -111,7 +111,7 @@
 .endm
 
 .macro _fromAbsb
-  adds PC, PC, #1
+  adds PC, PC, #2
   mov  r0, PC
   _ldw
   mov  ADDR, r0
@@ -119,7 +119,7 @@
 .endm
 
 .macro _fromAbsoluteIndexed reg
-  adds PC, PC, #1
+  adds PC, PC, #2
   mov  r0, PC
   _ldw
   add  r0, r0, \reg
