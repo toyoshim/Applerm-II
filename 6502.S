@@ -215,8 +215,9 @@
 
 .macro _toAbsb
   adds r0, PC, #1
+  mov TZ, T0
   _ldw
-  mov  r1, T0
+  mov  r1, TZ
   _stb
   adds PC, PC, #3
 .endm
