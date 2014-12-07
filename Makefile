@@ -54,7 +54,7 @@ run: $(APP).bin
 	$(LPC21ISP) -control -term -bin $(APP).bin $(SERIAL) $(SPEED) $(CLOCK)
 
 clean:
-	rm -rf $(APP).bin $(APP) $(OBJS) test
+	rm -rf $(APP).bin $(APP) $(OBJS) test ftest
 
 # Use this build target to install required packages if you are on Ubuntu14.04.
 install-deps:

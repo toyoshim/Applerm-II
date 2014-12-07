@@ -91,6 +91,11 @@
   _stb
   mov  r0, SP
   subs r0, r0, #1
+  cmp  r0, #0xff
+  bne  1f
+  lsls r0, r0, #1
+  adds r0, r0, #1
+1:
   mov  SP, r0
 .endm
 
@@ -101,30 +106,55 @@
   _stb
   mov  r0, SP
   subs r0, r0, #1
+  cmp  r0, #0xff
+  bne  1f
+  lsls r0, r0, #1
+  adds r0, r0, #1
+1:
+  mov  SP, r0
   mov  r1, \reg
   _stb
   mov  r0, SP
-  subs r0, r0, #2
+  subs r0, r0, #1
+  cmp  r0, #0xff
+  bne  1f
+  lsls r0, r0, #1
+  adds r0, r0, #1
+1:
   mov  SP, r0
 .endm
 
 .macro _popb
   mov  r0, SP
   adds r0, r0, #1
+  lsrs r1, r0, #10
+  bcc  1f
+  lsrs r0, r0, #1
+1:
   mov  SP, r0
   _ldb
 .endm
 
 .macro _popw
-  mov  T0, SP
-  adds r0, T0, #1
+  mov  r0, SP
+  adds r0, r0, #1
+  lsrs r1, r0, #10
+  bcc  1f
+  lsrs r0, r0, #1
+1:
+  mov  SP, r0
   _ldb
-  mov  T1, r0
-  adds r0, T0, #2
+  mov  T0, r0
+  mov  r0, SP
+  adds r0, r0, #1
+  lsrs r1, r0, #10
+  bcc  1f
+  lsrs r0, r0, #1
+1:
   mov  SP, r0
   _ldb
   lsls r0, r0, #8
-  adds r0, r0, T1
+  adds r0, r0, T0
 .endm
 
 .macro _decode
@@ -1271,10 +1301,11 @@ op99:  // STA - Absolute, Y
   _decode
 
 op9a:  // TXS
-  _t   RX, SP
   movs r0, #1
   lsls r0, r0, #8
-  add  SP, SP, r0
+  add  r0, RX, r0
+  mov  SP, r0
+  adds PC, PC, #1
   _decode
 
 op9d:  // STA - Absolute, X

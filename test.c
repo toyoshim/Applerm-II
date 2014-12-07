@@ -28,7 +28,7 @@ void cpu6502_dump(uint32_t pc, uint32_t a, uint32_t x, uint32_t y,
   assert(0x100 <= sp && sp < 0x200);
   fprintf(stderr, "*** dump *** PC=$%04x A=$%02x X=$%02x Y=$%02x SP=$%02x "
           "NV-B_DIZC=%d%d-%d_%d%d%d%d\n",
-          pc, a, x, y, sp, (sr >> 7) & 1, (sr >> 6) & 1, (sr >> 4) & 1,
+          pc, a, x, y, sp & 0xff, (sr >> 7) & 1, (sr >> 6) & 1, (sr >> 4) & 1,
           (sr >> 3) & 1, (sr >> 2) & 1, (sr >> 1) & 1, sr & 1);
   fflush(stderr);
   __asm__("movs r12, %0":: "r"(fp));

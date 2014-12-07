@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -14,15 +15,21 @@ void prn(int c) {
   __asm__("movs r12, %0":: "r"(fp));
 }
 
-void cpu6502_dump(
-    uint16_t pc, uint8_t a, uint8_t x, uint8_t y, uint8_t sp, uint8_t sr) {
+void cpu6502_dump(uint32_t pc, uint32_t a, uint32_t x, uint32_t y,
+                  uint32_t sp, uint32_t sr) {
   uint8_t fp;
   __asm__("movs %0, r12": "=r"(fp));
   fprintf(stderr, "*** dump *** PC=$%04x A=$%02x X=$%02x Y=$%02x SP=$%02x "
           "NV-B_DIZC=%d%d-%d_%d%d%d%d\n",
-          pc, a, x, y, sp, (sr >> 7) & 1, (sr >> 6) & 1, (sr >> 4) & 1,
+          pc, a, x, y, sp & 0xff, (sr >> 7) & 1, (sr >> 6) & 1, (sr >> 4) & 1,
           (sr >> 3) & 1, (sr >> 2) & 1, (sr >> 1) & 1, sr & 1);
   fflush(stderr);
+  assert(pc < 0x10000);
+  assert(a < 0x100);
+  assert(x < 0x100);
+  assert(y < 0x100);
+  assert(sr < 0x100);
+  assert(0x100 <= sp && sp < 0x200);
   __asm__("movs r12, %0":: "r"(fp));
 }
 
