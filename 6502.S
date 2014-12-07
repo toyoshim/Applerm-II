@@ -347,7 +347,24 @@
 .endm
 
 .macro _cp reg
-// TODO
+  mov  r1, \reg
+  subs r0, r1, r0
+  __cl (FLAG_N | FLAG_Z | FLAG_C)
+  beq  1f
+  bcc  3f
+  __se FLAG_C
+  b    3f
+1:
+  bcc  2f
+  __se FLAG_C
+2:
+  __se FLAG_Z
+3:
+  movs r1, #0x80
+  tst  r0, r1
+  beq  1f
+  __se FLAG_N
+1:
 .endm
 
 .macro _dec
@@ -359,7 +376,11 @@
 .endm
 
 .macro _inc
-// TODO
+  mov  r0, RA
+  subs r0, r0, #1
+  mov  RA, r0
+  _flag_nz
+  adds PC, PC, #1
 .endm
 
 .macro _jmp
