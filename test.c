@@ -6,6 +6,8 @@
 
 static uint8_t mem[0x10000];
 static uint8_t key = 0x80;
+static char keyString[] = "10 print \"hello\"\r20 end\rlist\rrun\r";
+static uint32_t keyCount = 0;
 static uint8_t last = 0x00;
 
 void prn(int c) {
@@ -53,10 +55,23 @@ uint8_t cpu6502_load(uint16_t addr) {
     abort();
   } else if (0xc000 <= addr & addr < 0xcfff) {
     // I/O emulation.
-    if (0xc000 == addr)
-      result = key;
-    if (0xc010 == addr)
+    if (0xc000 == addr) {
+      keyCount++;
+      if (keyCount < 100000)
+        result = key;
+      else if (keyCount & 0xffff)
+        result = key;
+      else {
+        uint32_t n = (keyCount - 100000) >> 16;
+        if (n >= sizeof(keyString))
+          result = key;
+        else
+          result = keyString[n] | 0x80;
+      }
+    } else if (0xc010 == addr) {
       key &= 0x7f;
+      result = 0;
+    }
   } else {
     // Installed memory.
     result = mem[addr];
