@@ -440,7 +440,7 @@
 .macro _bit
   __cl (FLAG_N | FLAG_Z | FLAG_V)
   mov  r1, RA
-  ands r0, r1, r0
+  ands r1, r1, r0
   bne  1f
   __se FLAG_Z
 1:
