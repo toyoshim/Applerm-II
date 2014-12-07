@@ -281,7 +281,7 @@
   bne  1f
   __se FLAG_Z
 1:
-  movs r1, #0x80
+  movs r1, #FLAG_N
   tst  r0, r1
   beq  1f
   __se FLAG_N
@@ -299,12 +299,65 @@
 .endm
 
 .macro _adc
-// TODO
+  mov  r1, RA
+  add  r1, r1, r0
+  movs r2, #FLAG_C
+  tst  SR, r2
+  bne  1f
+  adds r1, r1, #1
+1:
+  movs r2, #FLAG_D
+  tst  SR, r2
+  beq  1f
+  movs r2, #0x0f
+  ands r1, r1, r2
+  mov  T0, RA
+  lsrs T0, T0, #8
+  mov  T1, r0
+  lsrs T1, T1, #8
+  adds r2, T0, T1
+  cmp  r1, #10
+  blo  2f
+  subs r1, r1, #10
+  adds r2, r2, #1
+2:
+  cmp  r2, #10
+  blo  2f
+  adds r2, r2, #6
+2:
+  lsls r2, r2, #8
+  adds r1, r1, r2
+1:
+  __cl (FLAG_N | FLAG_Z | FLAG_C | FLAG_V)
+  uxtb r2, r1
+  movs r2, r2
+  bne  1f
+  __se FLAG_Z
+1:
+  movs r3, #FLAG_N
+  tst  r2, r3
+  beq  1f
+  __se FLAG_N
+1:
+  lsrs r1, r1, #17
+  bcc  1f
+  __se FLAG_C
+1:
+  mov  r1, RA
+  eors r0, r1, r0
+  mvns r0, r0
+  eors r1, r1, r2
+  ands r0, r0, r1
+  lsrs r0, r0, #8
+  bcc 1f
+  __se FLAG_V
+  mov  RA, r2
+  adds PC, PC, #1
 .endm
 
 .macro _asl
   __cl (FLAG_N | FLAG_Z | FLAG_C)
-  movs r1, #0x80
+  movs r1, #FLAG_N
   tst  r0, r1
   beq  1f
   bics r0, r0, r1
@@ -328,7 +381,7 @@
   bne  1f
   __se FLAG_Z
 1:
-  movs r1, #0x80
+  movs r1, #FLAG_N
   tst  r0, r1
   beq  1f
   __se FLAG_N
@@ -360,7 +413,7 @@
 2:
   __se FLAG_Z
 3:
-  movs r1, #0x80
+  movs r1, #FLAG_N
   tst  r0, r1
   beq  1f
   __se FLAG_N
@@ -370,6 +423,7 @@
 .macro _dec
   mov  r0, RA
   adds r0, r0, #1
+  uxtb r0, r0
   mov  RA, r0
   _flag_nz
   adds PC, PC, #1
@@ -378,6 +432,7 @@
 .macro _inc
   mov  r0, RA
   subs r0, r0, #1
+  uxtb r0, r0
   mov  RA, r0
   _flag_nz
   adds PC, PC, #1
@@ -412,7 +467,7 @@
   bne  1f
   __se FLAG_Z
 1:
-  movs r1, #0x80
+  movs r1, #FLAG_N
   tst  r0, r1
   beq  1f
   __se FLAG_N
@@ -428,7 +483,7 @@
   movs r2, #FLAG_C
   ands r2, SR, r2
   __cl (FLAG_N | FLAG_Z | FLAG_C)
-  movs r1, #0x80
+  movs r1, #FLAG_N
   tst  r0, r1
   beq  1f
   __se FLAG_C
@@ -461,7 +516,7 @@
   bne  1f
   __se FLAG_Z
 1:
-  movs r1, #0x80
+  movs r1, #FLAG_N
   tst  r0, r1
   beq  1f
   __se FLAG_N
