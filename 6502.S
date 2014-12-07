@@ -9,6 +9,14 @@
   .extern cpu6502_load
   .extern cpu6502_store
 
+.extern prn
+.macro prn reg
+  push {r0-r3}
+  mov r0, \reg
+  bl prn
+  pop {r0-r3}
+.endm
+
 #define T0 r4
 #define T1 r5
 #define PC r6
@@ -363,11 +371,11 @@
   bics r0, r0, r1
   __se FLAG_C
 1:
-  lsls r0, r0, #1
+  lsls T0, r0, #1
   bne  1f
   __se FLAG_Z
 1:
-  tst  r0, r1
+  tst  T0, r1
   beq  1f
   __se FLAG_N
 1:
@@ -463,12 +471,12 @@
   beq  1f
   __se FLAG_C
 1:
-  lsrs r0, r0, #1
+  lsrs T0, r0, #1
   bne  1f
   __se FLAG_Z
 1:
   movs r1, #FLAG_N
-  tst  r0, r1
+  tst  T0, r1
   beq  1f
   __se FLAG_N
 1:
@@ -490,11 +498,11 @@
 1:
   lsls r0, r0, #1
   uxtb r0, r0
-  adds r0, r0, r2
+  adds T0, r0, r2
   bne  1f
   __se FLAG_Z
 1:
-  tst  r0, r1
+  tst  T0, r1
   beq  1f
   __se FLAG_N
 1:
@@ -512,12 +520,12 @@
   __se FLAG_C
 1:
   lsrs r0, r0, #1
-  adds r0, r0, r2
+  adds T0, r0, r2
   bne  1f
   __se FLAG_Z
 1:
   movs r1, #FLAG_N
-  tst  r0, r1
+  tst  T0, r1
   beq  1f
   __se FLAG_N
 1:

@@ -4,6 +4,10 @@
 
 uint8_t mem[0x10000];
 
+void prn(int c) {
+  printf("### $%02x ###\n", c);
+}
+
 void cpu6502_dump(
     uint16_t pc, uint8_t a, uint8_t x, uint8_t y, uint8_t sp, uint8_t sr) {
   printf("*** dump *** PC=$%04x A=$%02x X=$%02x Y=$%02x SP=$%02x "
