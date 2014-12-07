@@ -401,8 +401,27 @@
 1:
 .endm
 
+.macro _bxc reg
+  adds PC, PC, #1
+  movs r0, #\reg
+  tst  SR, r0
+  bne  1f
+  _bxx
+1:
+.endm
+
+.macro _bxs reg
+  adds PC, PC, #1
+  movs r0, #\reg
+  tst  SR, r0
+  beq  1f
+  _bxx
+1:
+.endm
+
 .macro _bxx
-  _fromImmb
+  mov  r0, PC
+  _ldb
   sxtb r0, r0
   add  PC, PC, r0
 .endm
@@ -807,11 +826,7 @@ op0e:  // ASL - Absolute
   _decode
 
 op10:  // BPL (N==0)
-  movs r0, #FLAG_N
-  tst  SR, r0
-  bne  1f
-  _bxx
-1:
+  _bxc FLAG_N
   _decode
 
 op11:  // ORA - (Indirect), Y
@@ -913,11 +928,7 @@ op2e:  // ROL - Absolute
   _decode
 
 op30:  // BMI (N==1)
-  movs r0, #FLAG_N
-  tst  SR, r0
-  beq  1f
-  _bxx
-1:
+  _bxs FLAG_N
   _decode
 
 op31:  // AND - (Indirect), Y
@@ -1010,11 +1021,7 @@ op4e:  // LSR - Absolute
   _decode
 
 op50:  // BVC (V==0)
-  movs r0, #FLAG_V
-  tst  SR, r0
-  bne  1f
-  _bxx
-1:
+  _bxc FLAG_V
   _decode
 
 op51:  // EOR - (Indirect), Y
@@ -1111,11 +1118,7 @@ op6e:  // ROR - Absolute
   _decode
 
 op70:  // BVS (V==1)
-  movs r0, #FLAG_V
-  tst  SR, r0
-  beq  1f
-  _bxx
-1:
+  _bxs FLAG_V
   _decode
 
 op71:  // ADC - (Indirect), Y
@@ -1199,11 +1202,7 @@ op8e:  // STX - Absolute
   _decode
 
 op90:  // BCC (C==0)
-  movs r0, #FLAG_C
-  tst  SR, r0
-  bne  1f
-  _bxx
-1:
+  _bxc FLAG_C
   _decode
 
 op91:  // STA - (Indirect), Y
@@ -1308,11 +1307,7 @@ opae:  // LDX - Absolute
   _decode
 
 opb0:  // BCS (C==1)
-  movs r0, #FLAG_C
-  tst  SR, r0
-  beq 1f
-  _bxx
-1:
+  _bxs FLAG_C
   _decode
 
 opb1:  // LDA - (Indirect), Y
@@ -1423,11 +1418,7 @@ opce:  // DEC - Absolute
   _decode
 
 opd0:  // BNE (Z==0)
-  movs r0, #FLAG_Z
-  tst  SR, r0
-  bne  1f
-  _bxx
-1:
+  _bxc FLAG_Z
   _decode
 
 opd1:  // CMP - (Indirect), Y
@@ -1520,11 +1511,7 @@ opee:  // INC - Absolute
   _decode
 
 opf0:  // BEQ (Z==1)
-  movs r0, #FLAG_Z
-  tst  SR, r0
-  beq  1f
-  _bxx
-1:
+  _bxs FLAG_Z
   _decode
 
 opf1:  // SBC - (Indirect), Y

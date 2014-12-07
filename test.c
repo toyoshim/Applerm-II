@@ -14,15 +14,18 @@ void cpu6502_dump(
          "NV-B_DIZC=%d%d-%d_%d%d%d%d\n",
          pc, a, x, y, sp, (sr >> 7) & 1, (sr >> 6) & 1, (sr >> 4) & 1,
          (sr >> 3) & 1, (sr >> 2) & 1, (sr >> 1) & 1, sr & 1);
+  fflush(stdout);
 }
 
 uint8_t cpu6502_load(uint16_t addr) {
   printf("load  $%04x => $%02x\n", addr, mem[addr]);
+  fflush(stdout);
   return mem[addr];
 }
 
 void cpu6502_store(uint16_t addr, uint8_t data) {
   printf("store $%04x <= $%02x\n", addr, data);
+  fflush(stdout);
   mem[addr] = data;
 }
 
