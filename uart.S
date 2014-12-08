@@ -151,3 +151,58 @@ uart_puthex16:
   pop  {pc}
   .size uart_puthex16, .-uart_puthex16
 
+  // void uart_putd(char n);
+  .global uart_putd
+  .type uart_putd, %function
+uart_putd:
+  push {lr}
+  movs r1, #0
+  movs r2, #100
+  movs r3, #0
+1:
+  subs r0, r0, r2
+  bcc  1f
+  adds r1, r1, #1
+  b    1b
+1:
+  adds r0, r0, r2
+  cmp  r1, #0
+  beq  2f
+  push {r0}
+  mov  r0, r1
+  bl   uart_putx
+  pop  {r0}
+  movs r3, #1
+2:
+  movs r1, #0
+  movs r2, #10
+1:
+  subs r0, r0, r2
+  bcc  1f
+  adds r1, r1, #1
+  b    1b
+1:
+  adds r0, r0, r2
+  cmp  r1, #0
+  bne  1f
+  cmp  r3, #0
+  beq  2f
+1:
+  push {r0}
+  mov  r0, r1
+  bl   uart_putx
+  pop  {r0}
+  movs r3, #1
+2:
+  movs r1, #0
+  movs r2, #1
+1:
+  subs r0, r0, r2
+  bcc  1f
+  adds r1, r1, #1
+  b    1b
+1:
+  mov  r0, r1
+  bl   uart_putx
+  pop  {pc}
+

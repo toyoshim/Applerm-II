@@ -22,9 +22,10 @@ _reset:
   ldr  r0, =#(_stack_top - 32)
   mov  sp, r0
   bl   uart_init
-  ldr  r0, =#hello
-  bl   uart_putstr
-
+  movs r0, #'>'
+  bl   uart_putc
+  //ldr  r0, =#hello
+  //bl   uart_putstr
   bl   cpu6502_reset
   bl   cpu6502_run
 1:

@@ -158,7 +158,9 @@
 .endm
 
 .macro _decode
+#ifdef DUMP
   bl   dump
+#endif
   mov  r0, PC
   _ldb
   lsls r1, r0, #2
