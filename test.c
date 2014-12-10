@@ -45,6 +45,7 @@ uint8_t cpu6502_load(uint16_t addr) {
   if (0x0400 <= addr && addr <= 0x7ff) {
     // Fake text VRAM.
     result = mem[addr];
+    result = '@';
   } else if ((0x0300 <= addr && addr <= 0x03ff) ||
              (0x0900 <= addr && addr <= 0x0fff)) {
     // Fake memory impl to make it run on low memory chip.
@@ -100,10 +101,23 @@ void cpu6502_store(uint16_t addr, uint8_t data) {
       x -= 0x28;
       y += 0x08;
     }
-    if (y < 24) {
-      fprintf(stdout, "\e[%d;%dH%c", y + 7, x + 1, ascii[data & 0x3f]);
-      fflush(stdout);
-    }
+    // Note: Apple2 BASIC initializes screen as:
+    // 1) Fill screen with ' ' from left to right, then up to down.
+    //   for (var y = 0; y < 24; ++y)
+    //     for (var x = 0; x < 40; ++x)
+    //       clear x, y
+    // 2) Show "APPLE ][" from back to forth.
+    // 3) Count down from G to A at x = 40, y = 23
+    // 4) Scroll happens on CR at line 22 or 23, left to right, up to down
+    //   for (var y = 0; y < 23; ++y)
+    //     for (var x = 39; x >= 0; --x)
+    //       reset x, y
+    //   for (var x = 0; x < 40; ++x)
+    //     clear x, 23
+    //   prompt 0, 23
+    //fprintf(stdout, "\e[%d;%dH%c", y + 7, x + 1, ascii[data & 0x3f]);
+    fprintf(stdout, "(%2d,%2d)%c($%02x)\n", x, y, ascii[data & 0x3f], data);
+    fflush(stdout);
   } else if ((0x0300 <= addr && addr <= 0x03ff) ||
              (0x0900 <= addr && addr <= 0x0fff)) {
     // Fake memory impl to make it run on low memory chip.

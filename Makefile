@@ -51,6 +51,9 @@ ftest: 6502.S ftest.c
 run: $(APP).bin
 	$(LPC21ISP) -control -term -bin $(APP).bin $(SERIAL) $(SPEED) $(CLOCK)
 
+term:
+	$(LPC21ISP) -control -termonly $(SERIAL) $(SPEED) $(CLOCK)
+
 clean:
 	rm -rf $(APP).bin $(APP) $(OBJS) test ftest
 

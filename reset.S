@@ -10,6 +10,7 @@
   .extern cpu6502_run
   .extern uart_init
   .extern uart_putc
+  .extern a2_init
 
   .text
   .global _reset
@@ -18,9 +19,10 @@ _reset:
   ldr  r0, =#(_stack_top - 32)
   mov  sp, r0
   bl   uart_init
-  movs r0, #'>'
+  movs r0, #0x0a
   bl   uart_putc
 
+  bl   a2_init
   bl   cpu6502_reset
   bl   cpu6502_run
 1:

@@ -24,6 +24,10 @@ dump5:
   .ascii " NV-B_DIZC=\000"
 ascii:
   .ascii "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&'()*+,-./0123456789:;<=>?"
+logoi:
+  .ascii "\033[24C\000"
+curleft:
+  .ascii "\033[2D\000"
 
   .text
   .global cpu6502_dump
@@ -160,8 +164,6 @@ cpu6502_load:
   orrs r0, r0, r1
   ldr  r1, =#kbddata
   strb r0, [r1]
-  movs r0, #'@'
-  bl   uart_putc
   b    3b
 2:
   ldr  r2, =#kbddata
@@ -211,6 +213,14 @@ cpu6502_store:
   mov  pc, lr
 3:
   // Store to VRAM (0x0400-0x07ff)
+  ldr  r0, =#scrmode
+  ldrb r0, [r0]
+  cmp  r0, #0
+  beq  2f
+  push {lr}
+  bl   a2_tty
+  pop  {pc}
+2:
   cmp  r1, #0xff
   beq  1b
   cmp  r1, #0x7f
@@ -252,13 +262,8 @@ cpu6502_store:
   bl   uart_putd
   movs r0, #'H'
   bl   uart_putc
-  pop  {r1}
-  ldr  r2, =#ascii
-  movs r3, #0x3f
-  ands r3, r1, r3
-  adds r3, r3, r2
-  ldrb r0, [r3]
-  bl   uart_putc
+  pop  {r0}
+  bl   a2_putc
   pop  {pc}
 4:
   // Store to (0x0800-0x0fff)
@@ -281,6 +286,127 @@ cpu6502_store:
 1:
   mov  pc, lr
 
+  .global a2_init
+  .type a2_init, %function
+a2_init:
+  ldr  r0, =#scrmode
+  movs r1, #1
+  strb r1, [r0]
+  ldr  r0, =#scrline
+  movs r1, #0
+  strb r1, [r0]
+  mov  pc, lr
+
+a2_putc:
+  cmp  r0, #0xff
+  bne  1f
+  mov  pc, lr
+1:
+  cmp  r0, #0x7f
+  bne  1f
+  mov  pc, lr
+1:
+  push {lr}
+  ldr  r1, =#ascii
+  movs r2, #0x3f
+  ands r0, r0, r2
+  adds r1, r1, r0
+  ldrb r0, [r1]
+  bl   uart_putc
+  pop  {pc}
+
+a2_tty:
+  push {lr}
+  cmp  r0, #1
+  bne  1f
+  // scrmode 1 (waiting for Apple ][ logo)
+  cmp  r1, #0xdb
+  beq  2f
+  pop  {pc}
+2:
+  ldr  r0, =#logoi
+  push {r1}
+  bl   uart_putstr
+  pop  {r1}
+  movs r0, #2
+  ldr  r3, =#scrmode
+  strb r0, [r3]
+1:
+  cmp  r0, #2
+  bne  1f
+  // scrmode 2 (showing Apple ][ logo)
+  ldr  r0, =#curleft
+  push {r1}
+  bl   uart_putstr
+  pop  {r1}
+  mov  r0, r1
+  cmp  r0, #0xc1
+  bne  2f
+  ldr  r1, =#scrmode
+  movs r2, #3
+  strb r2, [r1]
+2:
+  bl   a2_putc
+1:
+  cmp  r0, #3
+  bne  1f
+  // scrmode 3 (waiting for prompt)
+  cmp  r1, #0xdd
+  beq  2f
+  pop  {pc}
+2:
+  ldr  r3, =#scrmode
+  movs r0, #4
+  strb r0, [r3]
+1:
+  cmp  r0, #4
+  bne 2f
+  // scrmode 4 (normal)
+  //cmp  r1, #0xff
+  //bne  1f
+  //pop  {pc}
+1:
+  //cmp  r1, #0x7f
+  //bne  1f
+  //pop  {pc}
+1:
+  movs r3, #0x04
+  lsls r3, r3, #8
+  subs r3, r2, r3
+  movs r2, r3
+  movs r0, #0x7f
+  ands r2, r2, r0
+  lsrs r3, r3, #7
+  cmp  r2, #0x50
+  blo  1f
+  subs r2, r2, #0x50
+  adds r3, r3, #0x10
+1:
+  cmp  r2, #0x28
+  blo  1f
+  subs r2, r2, #0x28  // x
+  adds r3, r3, #0x08  // y
+1:
+  ldr  r0, =#scrline
+  ldrb r0, [r0]
+  cmp  r0, r3
+  beq  1f
+  movs r0, #0x0a
+  push {r1-r3}
+  bl   uart_putc
+  ldr  r0, =#scrline
+  ldrb r1, [r0]
+  adds r1, r1, #1
+  strb r1, [r0]
+  pop  {r1-r3}
+  b    1b
+1:
+  mov  r0, r1
+  bl   a2_putc
+2:
+  // TODO: scroll
+  pop  {pc}
+
   .bss
 ram0000:
   .skip 0x400
@@ -289,4 +415,8 @@ ram0800:
 ramfake:
   .byte 0
 kbddata:
+  .byte 0
+scrmode:
+  .byte 0
+scrline:
   .byte 0
