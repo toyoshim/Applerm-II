@@ -20,7 +20,7 @@ uart_init:
   str  r1, [r0]
   // 1) IO port configuration to use UART
   ldr  r0, =#IOCON_PIO1_6
-  movs r1, #(PIO_BASE | FUNC_RXD)
+  movs r1, #(PIO_BASE | FUNC_RXD | MODE_UP)
   str  r1, [r0]
   ldr  r0, =#IOCON_PIO1_7
   movs r1, #(PIO_BASE | FUNC_TXD)
@@ -56,11 +56,6 @@ uart_init:
   movs r1, #(WORD_LEN_8 | STOP_BIT_1)
   str  r1, [r0]
 
-  // Enable TX
-  ldr  r0, =#U0TER
-  movs r1, #TXEN
-  str  r1, [r0]
-
   // Reset FIFO
   ldr  r0, =#U0FCR
   movs r1, #(FIFO_ENABLE | RX_RESET | TX_RESET)
@@ -68,6 +63,31 @@ uart_init:
 
   mov  pc, lr
   .size uart_init, .-uart_init
+
+  // int uart_ready();
+  .global uart_ready
+  .type uart_ready, %function
+uart_ready:
+  ldr  r0, =#U0LSR
+  ldr  r0, [r0]
+  movs r1, #LSR_RDR
+  ands r0, r0, r1
+  bne  1f
+  movs r0, #0
+  mov  pc, lr
+1:
+  movs r0, #1
+  mov  pc, lr
+  .size uart_ready, .-uart_ready
+
+  // int uart_getc();
+  .global uart_getc
+  .type uart_getc, %function
+uart_getc:
+  ldr  r0, =#U0RBR
+  ldr  r0, [r0]
+  mov  pc, lr
+  .size uart_getc, .-uart_getc
 
   // void uart_putc(char c);
   .global uart_putc
