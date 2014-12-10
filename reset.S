@@ -11,10 +11,6 @@
   .extern uart_init
   .extern uart_putc
 
-  .section .rodata
-hello:
-  .ascii "Applerm II\n\000"
-
   .text
   .global _reset
   .type _reset, %function
@@ -24,8 +20,7 @@ _reset:
   bl   uart_init
   movs r0, #'>'
   bl   uart_putc
-  //ldr  r0, =#hello
-  //bl   uart_putstr
+
   bl   cpu6502_reset
   bl   cpu6502_run
 1:

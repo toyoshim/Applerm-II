@@ -27,6 +27,7 @@
     .equ DLAB_ENABLE,   (1 << 7)
   .equ U0MCR,         0x40008010
   .equ U0LSR,         0x40008014
+    .equ LSR_RDR,  (1 << 0)
     .equ LSR_THRE, (1 << 5)
   .equ U0MSR,         0x40008018
   .equ U0SCR,         0x4000801c

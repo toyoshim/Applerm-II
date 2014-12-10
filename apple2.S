@@ -6,6 +6,8 @@
 
   .extern basic_rom
   .extern uart_putd
+  .extern uart_getc
+  .extern uart_ready
 
   .section .rodata
 dump0:
@@ -93,6 +95,7 @@ cpu6502_dump:
   .global cpu6502_load
   .type cpu6502_load, %function
 cpu6502_load:
+  push {lr}
   movs r2, r0
   lsrs r0, #8
   cmp  r0, #0xd0
@@ -101,12 +104,14 @@ cpu6502_load:
   blo  2f
   cmp  r0, #0x08
   blo  3f
+  cmp  r0, #0x10
+  blo  4f
   cmp  r0, #0xc0
-  bhs  4f
-  // Load from Fake RAM (0x0800-0xbfff)
+  bhs  5f
+  // Load from Fake RAM (0x1000-0xbfff)
   ldr  r0, =#ramfake
   ldrb r0, [r0]
-  mov  pc, lr
+  pop  {pc}
 1:
   // Load from ROM (0xd000-0xffff)
   movs r0, #0xd0
@@ -115,21 +120,65 @@ cpu6502_load:
   ldr  r0, =#basic_rom
   adds r0, r0, r2
   ldrb r0, [r0]
-  mov  pc, lr
+  pop  {pc}
 2:
   // Load from RAM (0x0000-0x03ff)
   ldr  r0, =#ram0000
   adds r0, r0, r2
   ldrb r0, [r0]
-  mov  pc, lr
+  pop  {pc}
 3:
   // Load from VRAM (0x0400-0x07ff)
   movs r0, #0xff
-  mov  pc, lr
+  pop  {pc}
 4:
+  // Load from RAM (0x0800-0x0fff)
+  movs r0, #0x08
+  lsls r0, r0, #8
+  subs r2, r2, r0
+  ldr  r0, =#ram0800
+  adds r0, r0, r2
+  ldrb r0, [r0]
+  pop  {pc}
+5:
   // Load from I/O (0xc000-0xcfff)
+  mov  r0, r2
+  uxtb r0, r0
+  cmp  r0, #0x00
+  bne  1f
+  // 0xc000 KBD (Last Key Pressed + 128)
+3:
+  bl   uart_ready
+  cmp  r0, #0x00
+  beq  2f
+  bl   uart_getc
+  cmp  r0, #0x0a
+  bne  4f
+  movs r0, #0x0d
+4:
+  movs r1, #0x80
+  orrs r0, r0, r1
+  ldr  r1, =#kbddata
+  strb r0, [r1]
+  movs r0, #'@'
+  bl   uart_putc
+  b    3b
+2:
+  ldr  r2, =#kbddata
+  ldrb r0, [r2]
+  pop  {pc}
+1:
+  cmp  r0, #0x10
+  bne  1f
+  // 0xc010 KBDSTRB (Keyboard Strobe)
+  ldr  r2, =#kbddata
+  ldrb r0, [r2]
+  movs r1, #0x7f
+  ands r0, r0, r1
+  strb r0, [r2]
+1:
   movs r0, #0
-  mov  pc, lr
+  pop  {pc}
 
   .global cpu6502_store
   .type cpu6502_store, %function
@@ -142,9 +191,11 @@ cpu6502_store:
   blo  2f
   cmp  r0, #0x08
   blo  3f
+  cmp  r0, #0x10
+  blo  4f
   cmp  r0, #0xc0
-  bhs  4f
-  // Store to Fake RAM (0x0800-0xbfff)
+  bhs  5f
+  // Store to Fake RAM (0x1000-0xbfff)
   ldr  r0, =#ramfake
   strb r1, [r0]
   mov  pc, lr
@@ -156,13 +207,14 @@ cpu6502_store:
   ldr  r0, =#ram0000
   adds r0, r0, r2
   strb r1, [r0]
+1:
   mov  pc, lr
 3:
   // Store to VRAM (0x0400-0x07ff)
+  cmp  r1, #0xff
+  beq  1b
   cmp  r1, #0x7f
-  bne  1f
-  mov  pc, lr
-1:
+  beq  1b
   push {lr}
   push {r1-r2}
   movs r0, #0x1b
@@ -209,12 +261,32 @@ cpu6502_store:
   bl   uart_putc
   pop  {pc}
 4:
-  // Load from I/O (0xc000-0xcfff)
-  movs r0, #0
+  // Store to (0x0800-0x0fff)
+  movs r0, #0x08
+  lsls r0, r0, #8
+  subs r2, r2, r0
+  ldr  r0, =#ram0800
+  adds r0, r0, r2
+  strb r1, [r0]
+  mov  pc, lr
+5:
+  // Store to I/O (0xc000-0xcfff)
+  mov  r0, r2
+  uxtb r0, r0
+  cmp  r0, #0x00
+  bne  1f
+  // 0xc000 KBD (Last Key Pressed + 128)
+  ldr  r2, =#kbddata
+  strb r1, [r2]
+1:
   mov  pc, lr
 
   .bss
 ram0000:
   .skip 0x400
+ram0800:
+  .skip 0x800
 ramfake:
+  .byte 0
+kbddata:
   .byte 0
