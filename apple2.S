@@ -164,7 +164,8 @@ cpu6502_load:
   orrs r0, r0, r1
   ldr  r1, =#kbddata
   strb r0, [r1]
-  b    3b
+  // Drop old input data?
+  // b    3b
 2:
   ldr  r2, =#kbddata
   ldrb r0, [r2]
@@ -360,20 +361,18 @@ a2_tty:
   strb r0, [r3]
 1:
   cmp  r0, #4
-  bne 2f
+  bne 3f
   // scrmode 4 (normal)
-  //cmp  r1, #0xff
-  //bne  1f
-  //pop  {pc}
-1:
-  //cmp  r1, #0x7f
-  //bne  1f
-  //pop  {pc}
 1:
   movs r3, #0x04
   lsls r3, r3, #8
   subs r3, r2, r3
   movs r2, r3
+  cmp  r2, #0x27
+  bne  1f
+  cmp  r1, #0xff
+  beq  2f
+1:
   movs r0, #0x7f
   ands r2, r2, r0
   lsrs r3, r3, #7
@@ -403,8 +402,42 @@ a2_tty:
 1:
   mov  r0, r1
   bl   a2_putc
+  pop  {pc}
 2:
-  // TODO: scroll
+  ldr  r0, =#scrmode
+  movs r1, #5
+  strb r1, [r0]
+3:
+  cmp  r0, #5
+  bne  2f
+  // scrmode 5 (Waitinf for scroll finished)
+  movs r3, #0x07
+  lsls r3, r3, #8
+  movs r0, #0xf7
+  adds r3, r3, r0
+  cmp  r2, r3
+  beq  1f
+  pop  {pc}
+1:
+  ldr  r0, =#scrline
+  ldrb r0, [r0]
+  movs r1, #24
+  subs r1, r0
+1:
+  movs r0, #0x0a
+  push {r1}
+  bl   uart_putc
+  pop  {r1}
+  subs r1, r1, #1
+  bne  1b
+
+  ldr  r1, =#scrmode
+  movs r0, #4
+  strb r0, [r1]
+  ldr  r1, =#scrline
+  movs r0, #23
+  strb r0, [r1]
+2:
   pop  {pc}
 
   .bss
