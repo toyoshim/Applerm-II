@@ -4,6 +4,8 @@
   .thumb
   .thumb_func
 
+  .include "registers.inc"
+
   .extern basic_rom
   .extern uart_putd
   .extern uart_getc
@@ -284,6 +286,49 @@ cpu6502_store:
   // 0xc000 KBD (Last Key Pressed + 128)
   ldr  r2, =#kbddata
   strb r1, [r2]
+  mov  pc, lr
+1:
+  cmp  r0, #0x90
+  bne  1f
+  // 0xc090 !!! GPIO0DIR
+  ldr  r0, =#GPIO0DIR
+  str  r1, [r0]
+  mov  pc, lr
+1:
+  cmp  r0, #0x91
+  bne  1f
+  // 0xc091 !!! GPIO1DIR
+  ldr  r0, =#GPIO1DIR
+  str  r1, [r0]
+  mov  pc, lr
+1:
+  cmp  r0, #0x92
+  bne  1f
+  // 0xc091 !!! GPIO2DIR
+  ldr  r0, =#GPIO2DIR
+  str  r1, [r0]
+  mov  pc, lr
+1:
+  cmp  r0, #0xa0
+  bne  1f
+  // 0xc0a0 !!! GPIO0DATA
+  ldr  r0, =#GPIO0DATA
+  str  r1, [r0]
+  mov  pc, lr
+1:
+  cmp  r0, #0xa1
+  bne  1f
+  // 0xc0a1 !!! GPIO1DATA
+  ldr  r0, =#GPIO1DATA
+  str  r1, [r0]
+  mov  pc, lr
+1:
+  cmp  r0, #0xa2
+  bne  1f
+  // 0xc0a1 !!! GPIO2DATA
+  ldr  r0, =#GPIO2DATA
+  str  r1, [r0]
+  mov  pc, lr
 1:
   mov  pc, lr
 
